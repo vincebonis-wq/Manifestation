@@ -1,10 +1,11 @@
 /* Service worker — offline-first cache */
-const CACHE = 'manifest-v2';
+const CACHE = 'manifest-v3';
 const ASSETS = [
   './',
   './index.html',
   './css/styles.css',
   './js/content.js',
+  './js/firebase-config.js',
   './js/sync.js',
   './js/app.js',
   './manifest.webmanifest',

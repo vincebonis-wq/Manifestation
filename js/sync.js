@@ -20,8 +20,12 @@ let pushTimer = null;
 let lastPushed = null;
 
 function getConfig() {
+  // 1) config intégrée à l'app (comptes partagés pour tous les visiteurs)
+  if (window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.apiKey) return window.FIREBASE_CONFIG;
+  // 2) sinon, config collée localement par l'utilisateur
   try { const r = localStorage.getItem(CFG_KEY); return r ? JSON.parse(r) : null; } catch { return null; }
 }
+function isEmbedded() { return !!(window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.apiKey); }
 function setConfig(obj) {
   if (!obj || !obj.apiKey || !obj.projectId) throw new Error('Config invalide');
   localStorage.setItem(CFG_KEY, JSON.stringify(obj));
@@ -116,7 +120,7 @@ async function signOut() {
 }
 
 window.Sync = {
-  isConfigured, getConfig, setConfig, clearConfig,
+  isConfigured, getConfig, setConfig, clearConfig, isEmbedded,
   init, push, signIn, signOut,
   onRemote: cb => remoteCb = cb,
   onStatus: cb => { statusCbs.push(cb); cb(status, statusMsg, user); },

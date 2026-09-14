@@ -781,6 +781,64 @@ function parseConfig(text){
   return obj;
 }
 
+/* -------------------------------------------------- AUTH GATE (comptes partagés) */
+let gateMode = 'signin';   // 'signin' | 'signup'
+function ouroborosSVG(size=64){
+  return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" aria-hidden="true">
+    <path d="M50 12 A38 38 0 1 1 39 14" fill="none" stroke="var(--gold-2)" stroke-width="6.5" stroke-linecap="round"/>
+    <path d="M39 14 q-11 -2 -16 6 q7 2 9 8 q5 -7 15 -6 q2 -5 -8 -8 z" fill="var(--gold-2)"/>
+    <circle cx="30.5" cy="20.5" r="1.9" fill="#14100a"/>
+    <path d="M0 -13 C2 -4 4 -2 13 0 C4 2 2 4 0 13 C-2 4 -4 2 -13 0 C-4 -2 -2 -4 0 -13 Z" transform="translate(50 54)" fill="var(--gold)"/>
+  </svg>`;
+}
+function gateShell(inner){
+  return `<div class="gate-card fade-in">
+    <div class="gate-mark">${ouroborosSVG(72)}</div>
+    <h1 class="gate-title">Manifestation</h1>
+    <div class="gate-sub">Crée ta réalité. Chaque compte est privé.</div>
+    ${inner}
+  </div>`;
+}
+function paintGate(){
+  const configured = window.Sync && window.Sync.isConfigured();
+  const st = window.Sync ? window.Sync.status : 'off';
+  const show = configured && st !== 'online';
+  let gate = $('#gate'), nav = $('#nav');
+  if (!show) { if (gate) gate.remove(); if (nav) nav.hidden = false; return; }
+  if (nav) nav.hidden = true;
+  if (!gate) { gate = document.createElement('div'); gate.id = 'gate'; document.body.appendChild(gate); }
+
+  if (st === 'connecting') { gate.innerHTML = gateShell(`<div class="gate-load">Connexion…</div>`); return; }
+
+  const isUp = gateMode === 'signup';
+  gate.innerHTML = gateShell(`
+    <div class="gate-tabs">
+      <button class="gate-tab ${!isUp?'on':''}" data-m="signin">Connexion</button>
+      <button class="gate-tab ${isUp?'on':''}" data-m="signup">Créer un compte</button>
+    </div>
+    ${st==='error' ? `<div class="gate-err">${esc(window.Sync.statusMsg||'Erreur')}</div>`:''}
+    <label class="field"><span class="lbl">Email</span><input type="email" id="g-email" placeholder="toi@exemple.com" autocomplete="email"></label>
+    <label class="field"><span class="lbl">Mot de passe</span><input type="password" id="g-pw" placeholder="••••••••" autocomplete="${isUp?'new-password':'current-password'}"></label>
+    <button class="btn btn-gold btn-block" id="g-go" style="margin-top:18px">${isUp?'Créer mon compte ✦':'Entrer'}</button>
+    <div class="gate-note">${isUp?'Ton espace est privé. Personne d\'autre n\'y a accès.':'Ravi de te revoir.'}</div>
+  `);
+  bindGate();
+}
+function bindGate(){
+  $$('#gate .gate-tab').forEach(t => t.addEventListener('click', () => { gateMode = t.dataset.m; paintGate(); }));
+  const go = $('#g-go'); if (!go) return;
+  const submit = async () => {
+    const email = $('#g-email').value.trim(), pw = $('#g-pw').value;
+    if (!email || !pw) { toast('Email + mot de passe requis'); return; }
+    if (gateMode==='signup' && pw.length < 6) { toast('Mot de passe : 6 caractères min.'); return; }
+    go.disabled = true; go.textContent = '…';
+    try { await window.Sync.signIn(email, pw, gateMode==='signup'); }
+    catch(e){ go.disabled=false; go.textContent = gateMode==='signup'?'Créer mon compte ✦':'Entrer'; toast(traduireErreur(e)); }
+  };
+  go.addEventListener('click', submit);
+  $('#g-pw').addEventListener('keydown', e => { if (e.key==='Enter') submit(); });
+}
+
 /* ===================================================================== */
 /* ROUTER                                                                 */
 /* ===================================================================== */
@@ -809,9 +867,12 @@ render();
 
 /* ---------------------------------------------------------- SYNC bootstrap */
 if (window.Sync) {
+  let wasOnline = false;
   window.Sync.onStatus((st) => {
-    paintSync();
-    if (['online','signed-out','error'].includes(st) && (location.hash.replace(/^#/,'')||'/')==='/progress') render();
+    paintSync(); paintGate();
+    if (st === 'online' && !wasOnline) { wasOnline = true; render(); }        // connexion réussie
+    else if (st !== 'online') wasOnline = false;
+    if (['signed-out','error'].includes(st) && (location.hash.replace(/^#/,'')||'/')==='/progress') render();
   });
   window.Sync.onRemote((remote, ts) => {
     // adopte l'état distant s'il est plus récent que le local
@@ -821,6 +882,7 @@ if (window.Sync) {
     render(); toast('Synchronisé ✦');
   });
   if (window.Sync.isConfigured()) window.Sync.init();
+  paintGate();
 }
 
 // onboarding: if no vision yet, gently prompt
