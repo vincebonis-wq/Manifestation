@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <title>Manifestation</title>
+  <meta name="description" content="Crée ta réalité. Vision, rituels quotidiens, libération des blocages inconscients." />
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#0b0c10" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Manifestation" />
+  <link rel="apple-touch-icon" href="icons/icon-180.png" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+
+  <!-- Fonts (offline fallback = system serif/sans) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <!-- gradient defs for rings -->
+  <svg width="0" height="0" style="position:absolute">
+    <defs>
+      <linearGradient id="goldgrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#d9b876"/>
+        <stop offset="100%" stop-color="#a07d3c"/>
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <div class="app" id="app"><!-- views render here --></div>
+
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="#/" data-tab="/"><span class="ni">◈</span><span class="nl">Accueil</span></a>
+      <a href="#/vision" data-tab="/vision"><span class="ni">✦</span><span class="nl">Vision</span></a>
+      <a href="#/blocks" data-tab="/blocks"><span class="ni">⟡</span><span class="nl">Blocages</span></a>
+      <a href="#/affirmations" data-tab="/affirmations"><span class="ni">❝</span><span class="nl">Affirm.</span></a>
+      <a href="#/progress" data-tab="/progress"><span class="ni">▲</span><span class="nl">Progrès</span></a>
+    </div>
+  </nav>
+
+  <div class="sheet-backdrop" id="sheet-backdrop">
+    <div class="sheet" id="sheet"><div class="grab"></div><div id="sheet-content"></div></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="js/content.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
+    }
+  </script>
+</body>
+</html>
