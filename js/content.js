@@ -116,8 +116,34 @@ const CONTENT = {
   rituals: [
     { id: 'gratitude',  icon: '☼', title: 'Gratitude',        sub: '3 choses pour lesquelles je suis reconnaissant',       route: '#/ritual/gratitude' },
     { id: 'm369',       icon: '❸', title: 'Méthode 369',       sub: 'Écris ton affirmation 3× / 6× / 9×',                    route: '#/ritual/m369' },
-    { id: 'viz',        icon: '◉', title: 'Visualisation',     sub: '2 min pour vivre ton objectif comme réel',              route: '#/ritual/viz' },
+    { id: 'viz',        icon: '◉', title: 'Visualisation',     sub: 'Deviens ton futur moi, 2 min, comme réel',              route: '#/ritual/viz' },
     { id: 'scripting',  icon: '✎', title: 'Scripting',         sub: 'Écris ta réalité au présent',                          route: '#/ritual/scripting' },
-    { id: 'action',     icon: '➤', title: 'Action alignée',    sub: 'LA chose concrète qui rapproche ta vision',            route: '#/ritual/action' },
+    { id: 'action',     icon: '➤', title: 'Action identitaire', sub: 'LA preuve concrète de qui tu deviens',                route: '#/ritual/action' },
+  ],
+
+  /* Loi de l'assumption / identité (inspiré Quantum Leap · Neville Goddard) */
+  identityPrompts: [
+    "Qui est la personne qui a DÉJÀ ce que tu désires ? Décris son identité.",
+    "Comment cette personne pense-t-elle, parle-t-elle, se comporte-t-elle au quotidien ?",
+    "Qu'est-ce qu'elle ne tolère plus ? Qu'est-ce qu'elle a arrêté de faire ?",
+    "Quelle décision prendrais-tu aujourd'hui si tu étais déjà cette personne ?",
+  ],
+  identityStarters: [
+    "Je suis quelqu'un qui…",
+    "L'argent et moi, c'est…",
+    "Face aux obstacles, je…",
+    "Je mérite…",
+  ],
+
+  /* Échelle de fréquence / conscience (adaptée de la Carte de Hawkins) */
+  frequency: [
+    { i:0, label:'Honte / Culpabilité', emoji:'🕳', color:'#6b4a4a' },
+    { i:1, label:'Peur / Anxiété',      emoji:'😰', color:'#7a5a3a' },
+    { i:2, label:'Colère / Frustration',emoji:'😤', color:'#9a6b3a' },
+    { i:3, label:'Désir / Manque',      emoji:'😶', color:'#b0873f' },
+    { i:4, label:'Courage (le seuil)',  emoji:'🔥', color:'#c6a15b' },
+    { i:5, label:'Acceptation / Calme', emoji:'🙂', color:'#c9b06a' },
+    { i:6, label:'Amour / Joie',        emoji:'💛', color:'#d9b876' },
+    { i:7, label:'Paix / Gratitude',    emoji:'✨', color:'#e6c884' },
   ],
 };

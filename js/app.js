@@ -25,15 +25,17 @@ const daySeed = (() => { const d=new Date(); return d.getFullYear()*372 + d.getM
 /* ------------------------------------------------------------- store */
 const KEY = 'manifest.v1';
 const DEFAULT = {
-  version: 1,
+  version: 2,
   vision: '',
+  identity: '',      // loi de l'assumption : "je suis déjà..."
   pillars: {},
   affirmation369: '',
   favorites: [],
   customAffirmations: [],
-  days: {},          // dateKey -> { rituals:{}, gratitude:[], scripting:'', action:'', m369:0 }
+  days: {},          // dateKey -> { rituals:{}, gratitude:[], scripting:'', action:'', m369:0, frequency:null }
   blocks: [],        // {id, ts, belief, reframe}
   createdAt: Date.now(),
+  updatedAt: 0,      // horloge pour la synchro (dernier changement local)
 };
 
 let S = load();
@@ -44,9 +46,13 @@ function load() {
     return Object.assign(structuredClone(DEFAULT), JSON.parse(raw));
   } catch { return structuredClone(DEFAULT); }
 }
-function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} }
+function save(sync=true) {
+  S.updatedAt = Date.now();
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {}
+  if (sync && window.Sync && window.Sync.isOnline()) window.Sync.push(S, S.updatedAt);
+}
 function day(k=TODAY) {
-  if (!S.days[k]) S.days[k] = { rituals:{}, gratitude:['','',''], scripting:'', action:'', m369:0 };
+  if (!S.days[k]) S.days[k] = { rituals:{}, gratitude:['','',''], scripting:'', action:'', m369:0, frequency:null };
   return S.days[k];
 }
 
@@ -100,11 +106,22 @@ function ring(pct){
 /* VIEWS                                                                  */
 /* ===================================================================== */
 
+const SYNC_LABEL = { off:'Local', connecting:'Connexion…', online:'Synchronisé', 'signed-out':'Non connecté', error:'Erreur sync' };
 function header(streakVal){
+  const st = window.Sync ? window.Sync.status : 'off';
   return `<div class="topbar">
     <div class="brand"><div class="mark">M</div><div class="name">Manifestation</div></div>
-    <div class="streak-pill">✦ ${streakVal} ${streakVal>1?'jours':'jour'}</div>
+    <div class="row" style="gap:10px">
+      <a class="sync-dot ${st}" href="#/progress" title="Synchro : ${SYNC_LABEL[st]||st}" aria-label="Synchronisation"><span class="d"></span></a>
+      <div class="streak-pill">✦ ${streakVal} ${streakVal>1?'jours':'jour'}</div>
+    </div>
   </div>`;
+}
+function paintSync(){
+  const el = $('.sync-dot'); if(!el || !window.Sync) return;
+  const st = window.Sync.status;
+  el.className = 'sync-dot ' + st;
+  el.title = 'Synchro : ' + (SYNC_LABEL[st]||st);
 }
 
 /* -------------------------------------------------- HOME */
@@ -127,6 +144,19 @@ function viewHome(){
   const vision = S.vision
     ? `<div class="vision-text">${esc(S.vision)}</div>`
     : `<div class="vision-text empty">Définis ta vision. Elle guidera chaque jour ton attention et ta réalité.</div>`;
+  const identity = S.identity
+    ? `<div class="identity-line"><span class="eyebrow" style="display:block;margin-bottom:6px">Je suis</span>${esc(S.identity)}</div>` : '';
+
+  const fq = CONTENT.frequency;
+  const cur = d.frequency;
+  const freqCard = `
+    <div class="card">
+      <div class="card-hd"><b>Ma fréquence, maintenant</b>${cur!=null?`<span class="gold" style="font-size:13px">${fq[cur].emoji} ${fq[cur].label.split(' ')[0]}</span>`:''}</div>
+      <div class="freq-scale" id="freq">
+        ${fq.map(f=>`<button class="freq-cell ${cur===f.i?'on':''}" data-f="${f.i}" title="${f.label}" style="--fc:${f.color}"><span class="fe">${f.emoji}</span></button>`).join('')}
+      </div>
+      <div class="freq-legend"><span>Basse</span><span class="muted">Courage = le passage vers la puissance</span><span>Haute</span></div>
+    </div>`;
 
   app.innerHTML = `
     ${header(st)}
@@ -136,7 +166,11 @@ function viewHome(){
       <button class="vision-edit" data-act="editVision" aria-label="Modifier">✎</button>
       <div class="eyebrow">Ma vision</div>
       ${vision}
+      ${identity}
     </div>
+
+    <div class="section-title"><h2 style="font-size:19px">Ma fréquence</h2></div>
+    ${freqCard}
 
     <div class="section-title"><h2>Rituel du jour</h2></div>
     <div class="card day-progress" style="margin-bottom:14px">
@@ -158,6 +192,11 @@ function viewHome(){
   `;
 
   $('[data-act="editVision"]').addEventListener('click', editVisionSheet);
+  $$('#freq .freq-cell').forEach(b => b.addEventListener('click', () => {
+    const v = +b.dataset.f; d.frequency = v; save(); haptic();
+    $$('#freq .freq-cell').forEach(x => x.classList.toggle('on', +x.dataset.f===v));
+    toast(`Fréquence : ${CONTENT.frequency[v].label}`);
+  }));
 }
 
 function editVisionSheet(){
@@ -195,6 +234,16 @@ function viewVision(){
         placeholder="Écris la vie que tu crées, au présent...">${esc(S.vision)}</textarea>
     </div>
 
+    <div class="section-title" style="margin-top:26px"><h2 style="font-size:19px">Mon identité</h2></div>
+    <p class="muted" style="font-size:13px;margin:0 4px 12px">Loi de l'assumption : tu ne manifestes pas ce que tu <i>veux</i>, mais ce que tu <b>assumes être</b>. Décris la personne que tu es déjà.</p>
+    <div class="card">
+      <div class="eyebrow" style="margin-bottom:8px">Je suis…</div>
+      <textarea id="identity" placeholder="Je suis quelqu'un qui crée sa réalité, agit avec certitude, et pour qui l'argent circule avec facilité...">${esc(S.identity)}</textarea>
+      <div class="chips" style="margin-top:12px" id="idstart">
+        ${CONTENT.identityStarters.map(s=>`<button class="chip" data-start="${esc(s)}">${esc(s)}</button>`).join('')}
+      </div>
+    </div>
+
     <div class="section-title" style="margin-top:26px"><h2 style="font-size:19px">Les piliers</h2></div>
     <p class="muted" style="font-size:13px;margin:0 4px 12px">Détaille ta vision par domaine. Plus c'est précis et incarné, plus ton attention se recalibre.</p>
     ${pillars}
@@ -204,9 +253,15 @@ function viewVision(){
   `;
   $('#save-vision').addEventListener('click', ()=>{
     S.vision = $('#main-vision').value.trim();
+    S.identity = $('#identity').value.trim();
     $$('[data-pillar]').forEach(t=> S.pillars[t.dataset.pillar]= t.value.trim());
     save(); toast('Vision enregistrée ✦'); haptic();
   });
+  $$('#idstart .chip').forEach(c=> c.addEventListener('click', ()=>{
+    const ta=$('#identity'); const s=c.dataset.start;
+    ta.value = (ta.value.trim() ? ta.value.trim()+'\n' : '') + s + ' ';
+    ta.focus();
+  }));
 }
 
 /* -------------------------------------------------- RITUALS dispatcher */
@@ -334,7 +389,8 @@ function ritScripting(){
 /* --- Aligned action --- */
 function ritAction(){
   const d=day();
-  app.innerHTML = ritualShell('Action alignée','La manifestation sans action crée de l\'impuissance. Choisis UNE action concrète, aujourd\'hui, vers ta vision.',`
+  app.innerHTML = ritualShell('Action identitaire','Le subconscient ne croit que ce qu\'il te voit faire. Prouve-lui qui tu deviens : UNE action que ferait ton futur moi, aujourd\'hui.',`
+    <div class="card" style="margin-bottom:14px"><div class="quote" style="font-size:15px">« Que ferait aujourd'hui la personne que je suis déjà en train de devenir ? »</div></div>
     <label class="field"><span class="lbl">Mon action du jour</span>
       <input type="text" id="act" value="${esc(d.action||'')}" placeholder="Ex : Envoyer 3 propositions à des clients."></label>
     <div class="card" style="margin-top:16px">
@@ -542,6 +598,22 @@ function viewProgress(){
     cells.push(`<div class="cell ${future?'':lvl} ${k===TODAY?'today':''}" style="${future?'opacity:.35':''}" title="${k}: ${c} rituels"></div>`);
   }
 
+  // frequency chart — 14 derniers jours
+  const fq=CONTENT.frequency; const fdays=[]; let fsum=0,fn=0;
+  for(let i=13;i>=0;i--){ const dd=new Date(); dd.setDate(dd.getDate()-i); const k=dateKey(dd);
+    const v=S.days[k]?S.days[k].frequency:null;
+    if(v!=null){ fsum+=v; fn++; }
+    fdays.push({k,v,d:dd});
+  }
+  const favg = fn? Math.round(fsum/fn) : null;
+  const freqChart = `
+    <div class="card" style="margin-top:14px">
+      <div class="card-hd"><b>Ma fréquence</b>${favg!=null?`<span class="gold" style="font-size:13px">${fq[favg].emoji} moy. ${fq[favg].label.split(' ')[0]}</span>`:'<span class="muted" style="font-size:12px">14 jours</span>'}</div>
+      <div class="freq-chart">
+        ${fdays.map(x=>`<div class="fbar" title="${x.k}"><div class="fill" style="height:${x.v!=null?((x.v+1)/8*100):3}%;background:${x.v!=null?fq[x.v].color:'var(--surface-2)'}"></div></div>`).join('')}
+      </div>
+    </div>`;
+
   app.innerHTML = `
     ${header(st)}
     <div class="section-title"><h2>Progrès</h2></div>
@@ -561,10 +633,15 @@ function viewProgress(){
       <div class="cal">${cells.join('')}</div>
     </div>
 
+    ${freqChart}
+
     <div class="card" style="margin-top:14px">
       <div class="card-hd"><b>Constance</b></div>
       <p class="muted" style="font-size:13.5px">La neuroplasticité récompense la répétition. Vise la régularité plutôt que la perfection : 3 rituels par jour suffisent à faire compter ta journée.</p>
     </div>
+
+    <div class="section-title" style="margin-top:26px"><h2 style="font-size:19px">Synchronisation</h2></div>
+    ${syncSection()}
 
     <div class="divider"></div>
     <button class="btn btn-ghost btn-block" id="export">Exporter mes données (sauvegarde)</button>
@@ -585,6 +662,7 @@ function viewProgress(){
     r.onload=()=>{ try{ S=Object.assign(structuredClone(DEFAULT), JSON.parse(r.result)); save(); toast('Sauvegarde importée'); render(); }catch{ toast('Fichier invalide'); } };
     r.readAsText(f);
   });
+  bindSync();
   $('#reset').addEventListener('click', ()=>{
     openSheet(`<h2 style="font-size:22px">Tout réinitialiser ?</h2>
       <p class="muted" style="font-size:14px;margin:8px 0">Cette action efface définitivement ta vision, tes rituels et ton historique.</p>
@@ -593,6 +671,114 @@ function viewProgress(){
     $('[data-close]').addEventListener('click', closeSheet);
     $('#confirm').addEventListener('click', ()=>{ S=structuredClone(DEFAULT); save(); closeSheet(); toast('Réinitialisé'); location.hash='#/'; render(); });
   });
+}
+
+/* -------------------------------------------------- SYNC UI */
+function syncSection(){
+  if (!window.Sync) return `<div class="card"><p class="muted" style="font-size:14px">Synchro indisponible.</p></div>`;
+  const st = window.Sync.status, u = window.Sync.user;
+  const dot = `<span class="sync-dot ${st}" style="display:inline-flex"><span class="d"></span></span>`;
+
+  if (!window.Sync.isConfigured()) {
+    return `<div class="card">
+      <div class="card-hd"><b>Synchro temps réel Mac ↔ iPhone</b>${dot}</div>
+      <p class="muted" style="font-size:13.5px;margin-bottom:6px">Activée en 2 min avec un projet Firebase gratuit. Tes données restent privées, dans <b>ton</b> compte. Sans ça, l'app fonctionne en local sur cet appareil.</p>
+      <button class="btn btn-gold btn-block" id="sy-config" style="margin-top:8px">Activer la synchro</button>
+    </div>`;
+  }
+  if (st === 'online' && u) {
+    return `<div class="card">
+      <div class="card-hd"><b>Synchronisé</b>${dot}</div>
+      <p class="soft" style="font-size:14px">Connecté en tant que <b class="gold">${esc(u.email||'compte')}</b>. Tes rituels se synchronisent en temps réel sur tous tes appareils.</p>
+      <div class="btn-row" style="margin-top:14px">
+        <button class="btn btn-ghost" id="sy-reconf">Reconfigurer</button>
+        <button class="btn btn-ghost" id="sy-signout">Se déconnecter</button>
+      </div>
+    </div>`;
+  }
+  // configured but signed-out / connecting / error → login form
+  return `<div class="card">
+    <div class="card-hd"><b>Se connecter pour synchroniser</b>${dot}</div>
+    ${st==='error'?`<div class="pill-note" style="margin-bottom:10px;border-color:var(--warn)">${esc(window.Sync.statusMsg||'Erreur')}</div>`:''}
+    <p class="muted" style="font-size:13px;margin-bottom:4px">Le même compte sur ton Mac et ton iPhone = mêmes données, en direct.</p>
+    <label class="field"><span class="lbl">Email</span><input type="text" id="sy-email" placeholder="toi@exemple.com"></label>
+    <label class="field"><span class="lbl">Mot de passe</span><input type="text" id="sy-pw" placeholder="••••••••" autocomplete="off"></label>
+    <div class="btn-row" style="margin-top:14px">
+      <button class="btn btn-ghost" id="sy-create">Créer un compte</button>
+      <button class="btn btn-gold" id="sy-signin">Se connecter</button>
+    </div>
+    <button class="btn btn-ghost btn-block" id="sy-reconf" style="margin-top:10px">Reconfigurer Firebase</button>
+  </div>`;
+}
+
+function bindSync(){
+  if (!window.Sync) return;
+  const on = (id, ev, fn) => { const el=$('#'+id); if(el) el.addEventListener(ev, fn); };
+
+  on('sy-config','click', configSheet);
+  on('sy-reconf','click', configSheet);
+  on('sy-signout','click', async ()=>{ try{ await window.Sync.signOut(); toast('Déconnecté'); }catch(e){ toast('Erreur'); } });
+
+  const doAuth = async (create) => {
+    const email=$('#sy-email').value.trim(), pw=$('#sy-pw').value;
+    if(!email||!pw){ toast('Email + mot de passe requis'); return; }
+    try { await window.Sync.signIn(email, pw, create); toast(create?'Compte créé ✦':'Connecté ✦'); }
+    catch(e){ toast(traduireErreur(e)); }
+  };
+  on('sy-signin','click', ()=>doAuth(false));
+  on('sy-create','click', ()=>doAuth(true));
+}
+
+function traduireErreur(e){
+  const c = (e && e.code) || '';
+  if (c.includes('invalid-credential')||c.includes('wrong-password')) return 'Identifiants incorrects';
+  if (c.includes('email-already-in-use')) return 'Compte déjà existant — connecte-toi';
+  if (c.includes('weak-password')) return 'Mot de passe trop court (min. 6)';
+  if (c.includes('invalid-email')) return 'Email invalide';
+  if (c.includes('network')) return 'Pas de réseau';
+  return (e && e.message) ? e.message.replace('Firebase:','').trim() : 'Erreur';
+}
+
+function configSheet(){
+  const existing = window.Sync.getConfig();
+  openSheet(`
+    <div class="eyebrow">Synchro · Firebase</div>
+    <h2 style="font-size:22px;margin:6px 0 6px">Activer la synchro</h2>
+    <ol class="muted" style="font-size:13px;padding-left:18px;line-height:1.7">
+      <li>Va sur <b>console.firebase.google.com</b> → nouveau projet (gratuit).</li>
+      <li>Ajoute une app <b>Web</b> (icône &lt;/&gt;) et copie l'objet <code>firebaseConfig</code>.</li>
+      <li>Active <b>Authentication → Email/Password</b> et crée une base <b>Firestore</b>.</li>
+      <li>Colle la config ci-dessous.</li>
+    </ol>
+    <label class="field"><span class="lbl">Config Firebase</span>
+      <textarea id="cfg" style="min-height:150px;font-family:ui-monospace,monospace;font-size:13px" placeholder='{\n  "apiKey": "...",\n  "authDomain": "...",\n  "projectId": "...",\n  "appId": "..."\n}'>${existing?esc(JSON.stringify(existing,null,2)):''}</textarea></label>
+    <div class="pill-note" style="margin-top:10px">Astuce : tu peux coller le bloc entier <code>const firebaseConfig = {…}</code>, je m'occupe du reste.</div>
+    <div class="btn-row" style="margin-top:14px">
+      <button class="btn btn-ghost" data-close>Annuler</button>
+      <button class="btn btn-gold" id="cfg-save">Enregistrer & connecter</button>
+    </div>`);
+  $('[data-close]').addEventListener('click', closeSheet);
+  $('#cfg-save').addEventListener('click', ()=>{
+    try {
+      const obj = parseConfig($('#cfg').value);
+      window.Sync.setConfig(obj);
+      closeSheet(); toast('Config enregistrée — connexion…');
+      window.Sync.init();
+      setTimeout(render, 400);
+    } catch(e){ toast('Config invalide : vérifie le collage'); }
+  });
+}
+
+function parseConfig(text){
+  let t = (text||'').trim();
+  const i = t.indexOf('{'), j = t.lastIndexOf('}');
+  if (i<0||j<0) throw new Error('no object');
+  t = t.slice(i, j+1);
+  let obj;
+  try { obj = JSON.parse(t); }
+  catch { obj = Function('return (' + t + ')')(); }   // config JS de la console (clés non quotées)
+  if (!obj.apiKey || !obj.projectId) throw new Error('missing keys');
+  return obj;
 }
 
 /* ===================================================================== */
@@ -620,6 +806,22 @@ function render(){
 
 window.addEventListener('hashchange', render);
 render();
+
+/* ---------------------------------------------------------- SYNC bootstrap */
+if (window.Sync) {
+  window.Sync.onStatus((st) => {
+    paintSync();
+    if (['online','signed-out','error'].includes(st) && (location.hash.replace(/^#/,'')||'/')==='/progress') render();
+  });
+  window.Sync.onRemote((remote, ts) => {
+    // adopte l'état distant s'il est plus récent que le local
+    if (!remote || (ts||0) <= (S.updatedAt||0)) return;
+    S = Object.assign(structuredClone(DEFAULT), remote);
+    try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {}
+    render(); toast('Synchronisé ✦');
+  });
+  if (window.Sync.isConfigured()) window.Sync.init();
+}
 
 // onboarding: if no vision yet, gently prompt
 if (!S.vision && !localStorage.getItem('manifest.onboarded')) {

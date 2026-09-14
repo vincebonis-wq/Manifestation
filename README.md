@@ -60,7 +60,28 @@ sw.js                 # cache offline-first
 icons/                # icônes (SVG + PNG 180/192/512 + maskable)
 ```
 
-**Données & vie privée** : tout est stocké dans le `localStorage` de ton navigateur. Rien n'est envoyé sur un serveur. Utilise **Progrès → Exporter** pour une sauvegarde, et **Importer** pour la restaurer (ou passer d'un appareil à l'autre).
+**Données & vie privée** : par défaut tout est stocké en local (`localStorage`). Utilise **Progrès → Exporter/Importer** pour une sauvegarde manuelle.
+
+---
+
+## Synchro temps réel Mac ↔ iPhone (Firebase)
+
+Pour que tes données soient identiques et **synchronisées en direct** sur tous tes appareils, active la synchro depuis **Progrès → Synchronisation → Activer**. C'est gratuit et privé (les données vivent dans **ton** projet Firebase).
+
+**Mise en place (une fois, ~2 min) :**
+1. [console.firebase.google.com](https://console.firebase.google.com/) → **Créer un projet** (plan Spark gratuit).
+2. **Ajouter une application Web** (icône `</>`) et copie l'objet `firebaseConfig`.
+3. **Authentication** → *Sign-in method* → active **Email/Password**.
+4. **Firestore Database** → *Créer une base* (mode production).
+5. **Firestore → Règles** → colle le contenu de [`firestore.rules`](firestore.rules) → *Publier*.
+6. Dans l'app (Progrès → Synchronisation → Activer), colle la config, puis **crée un compte** (email + mot de passe).
+7. Sur ton 2ᵉ appareil : installe l'app, colle la **même** config, **connecte-toi** avec le même compte. ✦
+
+Le point coloré en haut à droite indique l'état : gris = local, doré clignotant = connexion, vert = synchronisé.
+
+- **Temps réel** : les changements apparaissent en quelques instants d'un appareil à l'autre (Firestore `onSnapshot`).
+- **Hors-ligne** : la synchro reprend automatiquement au retour du réseau (cache Firestore).
+- **Sécurité** : chaque utilisateur n'accède qu'à ses propres données (voir `firestore.rules`).
 
 ---
 
