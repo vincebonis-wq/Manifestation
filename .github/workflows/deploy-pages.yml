@@ -1,8 +1,8 @@
 name: Deploy to GitHub Pages
 
+# Déclenchement manuel uniquement (évite les échecs tant que Pages n'est pas activé).
+# Une fois Pages activé avec la source "GitHub Actions", ce workflow redéploie l'app.
 on:
-  push:
-    branches: ["claude/manifestation-app-cross-platform-s2oq7t"]
   workflow_dispatch:
 
 permissions:
