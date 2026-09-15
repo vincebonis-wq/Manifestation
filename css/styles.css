@@ -270,13 +270,15 @@ h1,h2,h3 { font-family: var(--serif); font-weight: 600; letter-spacing: .2px; li
   max-width: 32ch; margin-left:auto; margin-right:auto; }
 .freq-scale { display:flex; gap:6px; }
 .freq-cell { flex:1; aspect-ratio:1; border-radius:12px;
-  border:1px solid color-mix(in srgb, var(--fc) 55%, var(--surface));
-  background: color-mix(in srgb, var(--fc) 42%, #fff); display:grid; place-items:center;
-  cursor:pointer; transition:.16s var(--ease); font-size:18px; opacity:.92; }
-.freq-cell:hover { opacity:1; transform: translateY(-1px); }
-.freq-cell.on { border-color: color-mix(in srgb, var(--fc) 60%, #000);
-  background: var(--fc); opacity:1; transform: translateY(-3px);
-  box-shadow: 0 8px 20px -7px var(--fc); }
+  border:1.5px solid color-mix(in srgb, var(--fc) 78%, #000 8%);
+  background: color-mix(in srgb, var(--fc) 68%, #fff); display:grid; place-items:center;
+  cursor:pointer; transition:.16s var(--ease); }
+.freq-cell .fe { font-size:24px; line-height:1; filter: drop-shadow(0 1px 1px rgba(0,0,0,.15)); }
+.freq-cell:hover { transform: translateY(-2px); }
+.freq-cell.on { background: var(--fc); border-color: color-mix(in srgb, var(--fc) 55%, #000);
+  transform: translateY(-4px) scale(1.04);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--fc) 30%, transparent), 0 10px 22px -6px var(--fc); }
+.freq-cell.on .fe { filter: drop-shadow(0 1px 2px rgba(0,0,0,.3)); }
 .freq-legend { display:flex; justify-content:space-between; font-size:11px; color:var(--text-mut); margin-top:10px; }
 .freq-chart { display:flex; align-items:flex-end; gap:4px; height:90px; margin-top:8px; }
 .freq-chart .fbar { flex:1; height:100%; display:flex; align-items:flex-end; }

@@ -1,5 +1,5 @@
 /* Service worker — offline-first cache */
-const CACHE = 'manifest-v6';
+const CACHE = 'manifest-v7';
 const ASSETS = [
   './',
   './index.html',
