@@ -9,11 +9,13 @@ PWA installable sur **Mac** et **iPhone**, fonctionne **hors-ligne**, données 1
 
 Une pratique quotidienne fondée sur ce qui marche vraiment (neurosciences + méthodes éprouvées) :
 
-- **Ma Vision** — ta vision principale + par piliers (Richesse, Carrière, Santé, Relations, Soi). Affichée en permanence pour recalibrer ton attention (système réticulé activateur).
+- **Mes Désirs — formule en 4 étapes** (Kevin Trudeau · *Your Wish Is Your Command*) : **Désir → Croyance → Attente → Action inspirée**. Chaque désir se « charge » en visualisation.
+- **Teachability Index** (Trudeau) : volonté d'apprendre + volonté de changer (score /100), prérequis de la manifestation.
+- **Ma Vision** — ta vision principale + identité (loi de l'assumption) + piliers (Richesse, Carrière, Santé, Relations, Soi). Affichée en permanence pour recalibrer ton attention (système réticulé activateur).
 - **Rituel du jour** (5 rituels, tracker + anneau de progression) :
   1. **Gratitude** — accorde le cerveau à l'abondance.
   2. **Méthode 369** — écris ton affirmation 3× / 6× / 9× (compteur guidé).
-  3. **Visualisation** — 2 min guidées avec respiration + prompts (le cerveau active les mêmes circuits que l'expérience réelle).
+  3. **Visualisation** — induction **onde thêta** (« fréquence de l'abondance ») puis visualisation chargée (**fréquence + puissance + durée**) et **lâcher-prise / détachement** en fin de séance (Trudeau).
   4. **Scripting** — écris ta réalité au présent.
   5. **Action alignée** — LA chose concrète du jour. *La manifestation sans action crée de l'impuissance ; l'app t'oblige à agir.*
 - **Blocages** — identifie une croyance limitante → questionne → recadre → **libère par le tapping EFT guidé** (9 points, minuteur, diagramme).

@@ -25,13 +25,15 @@ const daySeed = (() => { const d=new Date(); return d.getFullYear()*372 + d.getM
 /* ------------------------------------------------------------- store */
 const KEY = 'manifest.v1';
 const DEFAULT = {
-  version: 2,
+  version: 3,
   vision: '',
   identity: '',      // loi de l'assumption : "je suis déjà..."
   pillars: {},
   affirmation369: '',
   favorites: [],
   customAffirmations: [],
+  desires: [],       // {id, ts, desire, belief, expectancy, action, released, done}  (formule 4 étapes · Trudeau)
+  teachability: null,// {learn, change, ts}  (Teachability Index · Trudeau)
   days: {},          // dateKey -> { rituals:{}, gratitude:[], scripting:'', action:'', m369:0, frequency:null }
   blocks: [],        // {id, ts, belief, reframe}
   createdAt: Date.now(),
@@ -62,14 +64,12 @@ function doneCount(k=TODAY){ const d=S.days[k]; if(!d) return 0; return RITUAL_I
 function dayComplete(k){ return doneCount(k) >= 3; } // streak counts when ≥3 rituals
 
 function streak() {
-  let n=0; const d=new Date();
-  // if today not complete yet, streak still counts up to yesterday
-  for (let i=0;i<400;i++){
-    const k=dateKey(d);
-    if (dayComplete(k)) n++;
-    else if (i>0) break;        // gap before today ends streak
-    else if (!dayComplete(k)) { d.setDate(d.getDate()-1); continue; } // today incomplete: keep looking back
-    d.setDate(d.getDate()-1);
+  let n = 0; const d = new Date();
+  // Today may be incomplete without breaking the streak; count back from yesterday then.
+  if (!dayComplete(dateKey(d))) d.setDate(d.getDate() - 1);
+  for (let i = 0; i < 400; i++) {
+    if (!dayComplete(dateKey(d))) break;
+    n++; d.setDate(d.getDate() - 1);
   }
   return n;
 }
@@ -110,7 +110,7 @@ const SYNC_LABEL = { off:'Local', connecting:'Connexion…', online:'Synchronis�
 function header(streakVal){
   const st = window.Sync ? window.Sync.status : 'off';
   return `<div class="topbar">
-    <div class="brand"><div class="mark">M</div><div class="name">Manifestation</div></div>
+    <div class="brand"><div class="mark">${ouroborosSVG(22)}</div><div class="name">Manifestation</div></div>
     <div class="row" style="gap:10px">
       <a class="sync-dot ${st}" href="#/progress" title="Synchro : ${SYNC_LABEL[st]||st}" aria-label="Synchronisation"><span class="d"></span></a>
       <div class="streak-pill">✦ ${streakVal} ${streakVal>1?'jours':'jour'}</div>
@@ -169,6 +169,8 @@ function viewHome(){
       ${identity}
     </div>
 
+    ${desiresHomeCard()}
+
     <div class="section-title"><h2 style="font-size:19px">Ma fréquence</h2></div>
     ${freqCard}
 
@@ -197,6 +199,28 @@ function viewHome(){
     $$('#freq .freq-cell').forEach(x => x.classList.toggle('on', +x.dataset.f===v));
     toast(`Fréquence : ${CONTENT.frequency[v].label}`);
   }));
+}
+
+function desiresHomeCard(){
+  const active = S.desires.filter(d=>!d.done);
+  const top = active[0];
+  if (!top) {
+    return `<div class="section-title"><h2 style="font-size:19px">Mes désirs</h2><a class="link" href="#/desires">Ouvrir ›</a></div>
+      <a class="card desire-cta" href="#/desires">
+        <div><b>Formule ton premier désir</b><div class="s muted" style="font-size:13px;margin-top:2px">Désir · Croyance · Attente · Action — la méthode Trudeau</div></div>
+        <span class="gold" style="font-size:22px">✦</span>
+      </a>`;
+  }
+  const prog = desireProgress(top);
+  return `<div class="section-title"><h2 style="font-size:19px">Mes désirs</h2><a class="link" href="#/desires">Tout voir ›</a></div>
+    <a class="card desire-cta" href="#/desires">
+      <div style="min-width:0">
+        <div class="eyebrow" style="margin-bottom:4px">Désir prioritaire</div>
+        <b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(top.desire)}</b>
+        <div class="s muted" style="font-size:12.5px;margin-top:3px">${prog}/4 étapes${active.length>1?` · +${active.length-1} autre${active.length>2?'s':''}`:''}</div>
+      </div>
+      <span class="gold" style="font-size:20px">›</span>
+    </a>`;
 }
 
 function editVisionSheet(){
@@ -230,7 +254,7 @@ function viewVision(){
 
     <div class="vision-hero">
       <div class="eyebrow">Vision principale</div>
-      <textarea id="main-vision" style="background:transparent;border:none;padding:0;font-family:var(--serif);font-size:22px;min-height:90px"
+      <textarea id="main-vision" style="background:transparent;border:none;padding:0;font-family:var(--sans);font-weight:300;font-size:21px;line-height:1.4;min-height:90px"
         placeholder="Écris la vie que tu crées, au présent...">${esc(S.vision)}</textarea>
     </div>
 
@@ -262,6 +286,78 @@ function viewVision(){
     ta.value = (ta.value.trim() ? ta.value.trim()+'\n' : '') + s + ' ';
     ta.focus();
   }));
+}
+
+/* -------------------------------------------------- DÉSIRS · formule 4 étapes (Trudeau) */
+let chargedDesireId = null;
+function desireById(id){ return S.desires.find(d=>d.id===id); }
+function desireProgress(d){ return CONTENT.desireSteps.filter(s=>(d[s.key]||'').trim()).length; }
+
+function viewDesires(){
+  const items = S.desires.slice().sort((a,b)=>(a.done-b.done)||(b.ts-a.ts));
+  const list = items.length ? items.map(d=>{
+    const prog = desireProgress(d);
+    const steps = CONTENT.desireSteps.map(s=>`<span class="dstep ${ (d[s.key]||'').trim()?'on':''}" title="${s.label}">${s.n}</span>`).join('');
+    return `<div class="card desire ${d.done?'is-done':''}">
+      <div class="card-hd">
+        <div class="desire-title">${d.done?'✓ ':''}${esc(d.desire||'Désir sans titre')}</div>
+        <button class="icon-btn" data-edit="${d.id}" aria-label="Modifier">✎</button>
+      </div>
+      <div class="desire-steps">${steps}<span class="desire-prog">${prog}/4</span></div>
+      ${d.expectancy?`<div class="desire-line"><span class="k">Attente</span>${esc(d.expectancy)}</div>`:''}
+      ${d.action?`<div class="desire-line"><span class="k">Action</span>${esc(d.action)}</div>`:''}
+      <div class="btn-row" style="margin-top:14px">
+        <button class="btn btn-ghost" data-charge="${d.id}">◉ Charger</button>
+        <button class="btn ${d.done?'btn-ghost':'btn-gold'}" data-done="${d.id}">${d.done?'Réactiver':'C\'est réalisé ✦'}</button>
+      </div>
+    </div>`;
+  }).join('') : `<div class="card center"><p class="muted" style="font-size:14px;padding:8px 0">Aucun désir pour l'instant. Formule ton premier avec les 4 étapes.</p></div>`;
+
+  app.innerHTML = `
+    ${header(streak())}
+    <a href="#/" class="back-link">‹ Accueil</a>
+    <div class="section-title" style="margin-top:6px"><h2>Mes Désirs</h2></div>
+    <p class="muted" style="font-size:13.5px;margin:-6px 4px 16px">La formule de Kevin Trudeau : <b>Désir</b> → <b>Croyance</b> → <b>Attente</b> → <b>Action</b>. Sois précis, crois-y, attends-le avec certitude, puis agis.</p>
+    <button class="btn btn-gold btn-block" id="new-desire">✦ Formuler un nouveau désir</button>
+    <div class="stack" style="margin-top:16px">${list}</div>
+    <div style="height:8px"></div>
+  `;
+  $('#new-desire').addEventListener('click', ()=>desireSheet());
+  $$('[data-edit]').forEach(b=>b.addEventListener('click',()=>desireSheet(b.dataset.edit)));
+  $$('[data-charge]').forEach(b=>b.addEventListener('click',()=>{ chargedDesireId=b.dataset.charge; location.hash='#/ritual/viz'; }));
+  $$('[data-done]').forEach(b=>b.addEventListener('click',()=>{
+    const d=desireById(b.dataset.done); if(!d) return; d.done=!d.done; save(); haptic();
+    if(d.done) toast('Désir marqué réalisé ✦'); viewDesires();
+  }));
+}
+
+function desireSheet(id){
+  const d = id ? desireById(id) : null;
+  const fields = CONTENT.desireSteps.map(s=>`
+    <div class="dfield">
+      <div class="dfield-hd"><span class="dnum">${s.n}</span><span class="dfield-label">${s.label}</span></div>
+      <p class="dfield-hint">${s.hint}</p>
+      <textarea data-k="${s.key}" style="min-height:${s.key==='desire'?90:70}px" placeholder="${esc(s.ph)}">${d?esc(d[s.key]||''):''}</textarea>
+    </div>`).join('');
+  openSheet(`
+    <div class="eyebrow">Formule de manifestation · 4 étapes</div>
+    <h2 style="font-size:22px;margin:6px 0 14px">${d?'Modifier le désir':'Nouveau désir'}</h2>
+    ${fields}
+    <div class="btn-row" style="margin-top:18px">
+      ${d?`<button class="btn btn-ghost" id="d-del" style="flex:0 0 auto;color:var(--warn)">Supprimer</button>`:'<button class="btn btn-ghost" data-close>Annuler</button>'}
+      <button class="btn btn-gold" id="d-save">Enregistrer</button>
+    </div>`);
+  const closeBtn=$('[data-close]'); if(closeBtn) closeBtn.addEventListener('click', closeSheet);
+  $('#d-save').addEventListener('click', ()=>{
+    const vals={}; $$('[data-k]').forEach(t=> vals[t.dataset.k]=t.value.trim());
+    if(!vals.desire){ toast('Décris au moins ton désir (étape 1)'); return; }
+    if(d){ Object.assign(d, vals); }
+    else { S.desires.push({ id:'dz'+Date.now(), ts:Date.now(), released:false, done:false, ...vals }); }
+    save(); closeSheet(); toast('Désir enregistré ✦'); haptic(); viewDesires();
+  });
+  const del=$('#d-del'); if(del) del.addEventListener('click', ()=>{
+    S.desires = S.desires.filter(x=>x.id!==id); save(); closeSheet(); toast('Désir supprimé'); viewDesires();
+  });
 }
 
 /* -------------------------------------------------- RITUALS dispatcher */
@@ -321,55 +417,82 @@ function rit369(){
   $('#reset').addEventListener('click', ()=>{ d.m369=0; d.rituals.m369=false; save(); rit369(); });
 }
 
-/* --- Visualization (guided, timed, breathing) --- */
-let vizTimer;
+/* --- Visualization : induction thêta + fréquence/puissance/durée + lâcher-prise (Trudeau) --- */
+let vizTimer, vizBreathI;
 function ritViz(){
-  const DURATION = 120; // seconds
-  app.innerHTML = ritualShell('Visualisation','2 minutes. Vis ta vision comme déjà réelle — le cerveau active les mêmes circuits que l\'expérience vécue.',`
+  const THETA = 24, VIZ = 90, TOTAL = THETA + VIZ;   // secondes
+  const charged = chargedDesireId ? desireById(chargedDesireId) : null;
+  const target = charged ? charged.desire : (S.vision || 'ta vision');
+
+  const chargedBanner = charged
+    ? `<div class="viz-charge">◉ Tu charges : <b>${esc(charged.desire)}</b></div>` : '';
+
+  app.innerHTML = ritualShell('Visualisation','Descends en onde thêta — la « fréquence de l\'abondance » — puis vis ton désir comme déjà réel, avec puissance et durée.',`
+    ${chargedBanner}
     <div class="card">
-      <div class="timer-big" id="timer">2:00</div>
-      <div class="breath-stage">
+      <div class="row spread" style="margin-bottom:6px">
+        <span class="viz-phase eyebrow" id="phase">Préparation</span>
+        <span class="timer-big" id="timer" style="font-size:26px">${fmtT(TOTAL)}</span>
+      </div>
+      <div class="breath-stage" style="min-height:280px">
         <div class="breath-orb" id="orb"></div>
         <div class="breath-word" id="bword">Prêt ?</div>
       </div>
-      <div class="viz-prompt" id="vprompt">Installe-toi. Respire profondément. Quand tu es prêt, commence.</div>
+      <div class="viz-prompt" id="vprompt">Installe-toi confortablement. Quand tu es prêt, commence la descente.</div>
     </div>
     <div class="btn-row" style="margin-top:16px">
-      <button class="btn btn-ghost" id="stop">Arrêter</button>
+      <button class="btn btn-ghost" id="stop">Quitter</button>
       <button class="btn btn-gold" id="start">Commencer</button>
     </div>`);
 
-  let left=DURATION, running=false, breathIn=true, pIdx=0;
-  const orb=$('#orb'), bword=$('#bword'), vp=$('#vprompt'), tmr=$('#timer');
-  const fmt = s => `${Math.floor(s/60)}:${pad(s%60)}`;
+  let elapsed=0, running=false, breathIn=true;
+  const orb=$('#orb'), bword=$('#bword'), vp=$('#vprompt'), tmr=$('#timer'), phase=$('#phase');
+  function setPrompt(txt){ vp.textContent=txt; vp.classList.remove('fade-in'); void vp.offsetWidth; vp.classList.add('fade-in'); }
 
-  function breathe(){
+  function breathe(slow){
     if(!running) return;
     breathIn=!breathIn;
-    orb.classList.toggle('in', breathIn);
-    orb.classList.toggle('out', !breathIn);
-    bword.textContent = breathIn?'Inspire…':'Expire…';
+    orb.classList.toggle('in', breathIn); orb.classList.toggle('out', !breathIn);
+    bword.textContent = breathIn ? 'Inspire…' : 'Expire…';
   }
   function tick(){
     if(!running) return;
-    left--; tmr.textContent=fmt(left);
-    if (left % 17 === 0){ pIdx=(pIdx+1)%CONTENT.vizPrompts.length; vp.textContent=CONTENT.vizPrompts[pIdx]; vp.classList.remove('fade-in'); void vp.offsetWidth; vp.classList.add('fade-in'); }
-    if (left<=0){ finish(); }
+    elapsed++; tmr.textContent = fmtT(Math.max(TOTAL-elapsed,0));
+    if (elapsed <= THETA){
+      phase.textContent = 'Onde thêta';
+      if (elapsed % 4 === 1) setPrompt(rot(CONTENT.thetaScript, Math.floor(elapsed/4)));
+    } else if (elapsed <= TOTAL){
+      const t = elapsed - THETA;
+      phase.textContent = 'Vis ton désir';
+      if (t === 1) setPrompt(`Vois-le : ${esc0(target)}. C'est déjà réel.`);
+      else if (t % 13 === 0) setPrompt(rot(CONTENT.vizPromptsPlus, Math.floor(t/13)));
+    }
+    if (elapsed >= TOTAL) release();
+  }
+  function release(){
+    running=false; clearInterval(vizTimer); clearInterval(vizBreathI);
+    orb.className='breath-orb'; orb.classList.add('in'); bword.textContent='✦';
+    phase.textContent='Lâcher-prise';
+    setPrompt(rot(CONTENT.releaseLines, daySeed));
+    $('#start').textContent='C\'est confié ✓'; $('#start').disabled=false; $('#start').onclick=finish;
+    $('#start').classList.remove('btn-gold'); $('#start').classList.add('btn-gold');
+    haptic();
   }
   function finish(){
-    running=false; clearInterval(vizTimer); clearInterval(window._breathI);
-    orb.className='breath-orb'; bword.textContent='✦'; vp.textContent='Séance terminée. Cette scène est ta nouvelle normalité.';
     markDone('viz'); toast('Visualisation ancrée ◉'); haptic();
-    $('#start').textContent='Terminé ✓'; $('#start').disabled=true;
+    chargedDesireId=null; location.hash='#/';
   }
   $('#start').addEventListener('click', ()=>{
-    if(running) return; running=true; $('#start').textContent='En cours…'; $('#start').disabled=true;
-    vp.textContent=CONTENT.vizPrompts[0];
-    breathe(); window._breathI=setInterval(breathe,4000);
-    vizTimer=setInterval(tick,1000);
+    if(running) return; running=true;
+    $('#start').textContent='En cours…'; $('#start').disabled=true;
+    setPrompt(CONTENT.thetaScript[0]);
+    breathe(); vizBreathI=setInterval(breathe, 5000);   // respiration lente (5s) = thêta
+    vizTimer=setInterval(tick, 1000);
   });
-  $('#stop').addEventListener('click', ()=>{ running=false; clearInterval(vizTimer); clearInterval(window._breathI); location.hash='#/'; });
+  $('#stop').addEventListener('click', ()=>{ running=false; clearInterval(vizTimer); clearInterval(vizBreathI); chargedDesireId=null; location.hash='#/'; });
 }
+function fmtT(s){ return `${Math.floor(s/60)}:${pad(s%60)}`; }
+function esc0(s){ return esc(String(s).replace(/\.$/,'')); }
 
 /* --- Scripting --- */
 function ritScripting(){
@@ -640,6 +763,9 @@ function viewProgress(){
       <p class="muted" style="font-size:13.5px">La neuroplasticité récompense la répétition. Vise la régularité plutôt que la perfection : 3 rituels par jour suffisent à faire compter ta journée.</p>
     </div>
 
+    <div class="section-title" style="margin-top:26px"><h2 style="font-size:19px">Teachability Index</h2></div>
+    ${teachabilityCard()}
+
     <div class="section-title" style="margin-top:26px"><h2 style="font-size:19px">Synchronisation</h2></div>
     ${syncSection()}
 
@@ -662,6 +788,7 @@ function viewProgress(){
     r.onload=()=>{ try{ S=Object.assign(structuredClone(DEFAULT), JSON.parse(r.result)); save(); toast('Sauvegarde importée'); render(); }catch{ toast('Fichier invalide'); } };
     r.readAsText(f);
   });
+  bindTeachability();
   bindSync();
   $('#reset').addEventListener('click', ()=>{
     openSheet(`<h2 style="font-size:22px">Tout réinitialiser ?</h2>
@@ -670,6 +797,38 @@ function viewProgress(){
       <button class="btn btn-gold" id="confirm" style="background:var(--warn)">Effacer tout</button></div>`);
     $('[data-close]').addEventListener('click', closeSheet);
     $('#confirm').addEventListener('click', ()=>{ S=structuredClone(DEFAULT); save(); closeSheet(); toast('Réinitialisé'); location.hash='#/'; render(); });
+  });
+}
+
+/* -------------------------------------------------- TEACHABILITY INDEX (Trudeau) */
+function teachabilityCard(){
+  const t = S.teachability || { learn:50, change:50 };
+  const score = Math.round((t.learn + t.change)/2);
+  const T = CONTENT.teachability;
+  const sliders = T.axes.map(a=>`
+    <div class="ti-axis">
+      <div class="row spread"><span class="ti-label">${a.label}</span><span class="ti-val gold" id="tiv-${a.key}">${t[a.key]}</span></div>
+      <input type="range" min="0" max="100" step="5" value="${t[a.key]}" data-ti="${a.key}">
+      <p class="ti-hint">${a.hint}</p>
+    </div>`).join('');
+  return `<div class="card">
+    <p class="muted" style="font-size:13px;margin-bottom:6px">${T.intro}</p>
+    <div class="ti-score"><span class="ti-score-v" id="ti-score">${score}</span><span class="ti-score-l">/100</span></div>
+    ${sliders}
+    <p class="pill-note" style="margin-top:12px">${T.note}</p>
+    <button class="btn btn-gold btn-block" id="ti-save" style="margin-top:14px">Enregistrer mon index</button>
+  </div>`;
+}
+function bindTeachability(){
+  const upd=()=>{
+    const learn=+($('[data-ti="learn"]').value), change=+($('[data-ti="change"]').value);
+    $('#tiv-learn').textContent=learn; $('#tiv-change').textContent=change;
+    $('#ti-score').textContent=Math.round((learn+change)/2);
+  };
+  $$('[data-ti]').forEach(r=> r.addEventListener('input', upd));
+  const sv=$('#ti-save'); if(sv) sv.addEventListener('click', ()=>{
+    S.teachability={ learn:+($('[data-ti="learn"]').value), change:+($('[data-ti="change"]').value), ts:Date.now() };
+    save(); haptic(); toast('Teachability Index enregistré ✦');
   });
 }
 
@@ -851,6 +1010,7 @@ function render(){
   if (hash.startsWith('/ritual/')) viewRitual(seg2);
   else switch('/'+ (seg1||'')) {
     case '/':             viewHome(); break;
+    case '/desires':      viewDesires(); break;
     case '/vision':       viewVision(); break;
     case '/blocks':       viewBlocks(); break;
     case '/affirmations': viewAffirmations(); break;
@@ -885,9 +1045,14 @@ if (window.Sync) {
   paintGate();
 }
 
-// onboarding: if no vision yet, gently prompt
+// onboarding: if no vision yet, gently prompt (mais pas quand l'écran de connexion est actif)
 if (!S.vision && !localStorage.getItem('manifest.onboarded')) {
-  setTimeout(()=>{ localStorage.setItem('manifest.onboarded','1'); if(location.hash==='' || location.hash==='#/') editVisionSheet(); }, 700);
+  setTimeout(()=>{
+    const gated = window.Sync && window.Sync.isConfigured() && !window.Sync.isOnline();
+    if (gated) return;
+    localStorage.setItem('manifest.onboarded','1');
+    if(location.hash==='' || location.hash==='#/') editVisionSheet();
+  }, 800);
 }
 
 })();

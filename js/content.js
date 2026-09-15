@@ -103,14 +103,70 @@ const CONTENT = {
   /* Citations premium (rotation quotidienne) */
   quotes: [
     { q: "Ce que l'esprit peut concevoir et croire, il peut le réaliser.", s: "Napoleon Hill" },
+    { q: "Mets la fréquence de ce que tu veux, avec assez de puissance et de durée, et cela viendra vers toi.", s: "Kevin Trudeau" },
+    { q: "Ton souhait est ton commandement.", s: "Kevin Trudeau" },
+    { q: "Dis : « Je le veux — et si ça n'arrive jamais, c'est ok. » Sens-toi bien. Alors les portes s'ouvrent.", s: "Kevin Trudeau" },
+    { q: "Les gens échouent parce qu'ils veulent trop fort. Le désir désespéré repousse.", s: "Kevin Trudeau" },
     { q: "Deviens si concentré sur ta vision que tu n'aies plus le temps de douter.", s: "—" },
     { q: "La chance, c'est ce qui arrive quand la préparation rencontre l'opportunité.", s: "Sénèque" },
-    { q: "Tu ne vois pas le monde tel qu'il est, mais tel que tu es.", s: "Anaïs Nin" },
     { q: "Agis comme si ce que tu fais faisait une différence. C'est le cas.", s: "William James" },
     { q: "La discipline est le pont entre les objectifs et les accomplissements.", s: "Jim Rohn" },
     { q: "Tu deviens ce à quoi tu penses la plupart du temps.", s: "Earl Nightingale" },
+    { q: "Tu ne manifestes pas ce que tu veux — tu manifestes ce que tu ES.", s: "Neville Goddard" },
     { q: "La clarté précède la maîtrise. Vois-le, puis deviens-le.", s: "—" },
   ],
+
+  /* --- Kevin Trudeau · Your Wish Is Your Command --- */
+
+  /* Formule de manifestation en 4 étapes */
+  desireSteps: [
+    { key:'desire',    n:'1', label:'Désir',   hint:"Sois cristallin. Précis, mesurable, daté — mais assez crédible pour y croire.",
+      ph:"Ex : Le 30 juin, mon business génère 20 000 € par mois." },
+    { key:'belief',    n:'2', label:'Croyance', hint:"Un savoir profond que c'est possible POUR TOI. Choisis une preuve, un exemple réel.",
+      ph:"Ex : D'autres l'ont fait de zéro. Je suis capable et je le mérite." },
+    { key:'expectancy',n:'3', label:'Attente',  hint:"La certitude calme que c'est DÉJÀ en route — comme tu attends le lever du soleil.",
+      ph:"Ex : C'est fait. Ça arrive à moi, naturellement, au bon moment." },
+    { key:'action',    n:'4', label:'Action inspirée', hint:"L'action devient évidente une fois les 3 étapes posées. Quel premier pas fais-tu ?",
+      ph:"Ex : Aujourd'hui, je contacte 3 prospects idéaux." },
+  ],
+
+  /* Induction thêta (la « fréquence de l'abondance ») — lignes du compte à rebours */
+  thetaScript: [
+    "Ferme les yeux. Relâche les épaules, la mâchoire.",
+    "Respire lentement… l'expiration plus longue que l'inspiration.",
+    "À chaque expiration, tu descends d'un cran, plus profond.",
+    "Ton mental ralentit. Tu passes du bêta (agitation) au thêta.",
+    "C'est ici, dans le calme, que ta commande est entendue.",
+    "Tu es détendu, ouvert, réceptif. La fréquence est prête.",
+  ],
+
+  /* Étapes de la visualisation « chargée » (fréquence + puissance + durée) */
+  vizPromptsPlus: [
+    "Vois ta scène : ton désir est DÉJÀ réalisé. Où es-tu ?",
+    "Ajoute les détails : couleurs, lumière, sons, présences.",
+    "Monte la PUISSANCE : ressens la joie, la fierté, la gratitude, à fond.",
+    "Ancre le sentiment dans ton corps. Amplifie-le encore.",
+    "Dis intérieurement : « C'est à moi. Je suis déjà cette personne. »",
+    "Tiens la DURÉE : reste dans cette émotion, laisse-la t'imprégner.",
+    "Maintenant, LÂCHE. « Je le veux, et tout va bien. » Souris.",
+  ],
+
+  /* Détachement / lâcher-prise (fin de séance) */
+  releaseLines: [
+    "Je le veux profondément — et si ça n'arrive jamais, tout va bien.",
+    "Je confie ma commande. Je n'ai plus à la porter.",
+    "Je me sens bien maintenant, quoi qu'il arrive. C'est réglé.",
+  ],
+
+  /* Teachability Index — 2 axes (Trudeau) */
+  teachability: {
+    intro: "Ta capacité à manifester dépend de deux volontés. Évalue-toi honnêtement, aujourd'hui.",
+    axes: [
+      { key:'learn',  label:"Volonté d'APPRENDRE", hint:"Suis-je ouvert à de nouvelles idées, sans tout rejeter ni tout gober ?" },
+      { key:'change', label:"Volonté de CHANGER",  hint:"Suis-je prêt à modifier mes habitudes, mes croyances, mes actions ?" },
+    ],
+    note: "80+ = terrain fertile pour manifester. En dessous, commence par assouplir la volonté la plus basse.",
+  },
 
   /* Rituels quotidiens — l'ossature de la journée */
   rituals: [
