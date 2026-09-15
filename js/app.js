@@ -162,11 +162,14 @@ function viewHome(){
     ${header(st)}
     <div class="eyebrow center" style="margin-bottom:10px">${prettyDate()}</div>
 
-    <div class="vision-hero fade-in">
+    <div class="vision-hero altar fade-in">
+      <div class="altar-glyph">${ouroborosSVG(150)}</div>
       <button class="vision-edit" data-act="editVision" aria-label="Modifier">✎</button>
+      <div class="altar-orn"><span class="l"></span><i>❖</i><span class="r"></span></div>
       <div class="eyebrow">Ma vision</div>
       ${vision}
       ${identity}
+      ${S.vision?`<button class="btn-immersion" data-act="immerse">✦&nbsp; Entrer en immersion</button>`:''}
     </div>
 
     ${desiresHomeCard()}
@@ -194,6 +197,7 @@ function viewHome(){
   `;
 
   $('[data-act="editVision"]').addEventListener('click', editVisionSheet);
+  const immBtn=$('[data-act="immerse"]'); if(immBtn) immBtn.addEventListener('click', immerse);
   $$('#freq .freq-cell').forEach(b => b.addEventListener('click', () => {
     const v = +b.dataset.f; d.frequency = v; save(); haptic();
     $$('#freq .freq-cell').forEach(x => x.classList.toggle('on', +x.dataset.f===v));
@@ -221,6 +225,27 @@ function desiresHomeCard(){
       </div>
       <span class="gold" style="font-size:20px">›</span>
     </a>`;
+}
+
+function immerse(){
+  if (!S.vision) { editVisionSheet(); return; }
+  const el = document.createElement('div'); el.id='immersion';
+  el.innerHTML = `
+    <div class="imm-glyph">${ouroborosSVG(220)}</div>
+    <button class="imm-close" aria-label="Fermer">✕</button>
+    <div class="imm-inner">
+      <div class="altar-orn"><span class="l"></span><i>❖</i><span class="r"></span></div>
+      <div class="eyebrow" style="text-align:center;margin-bottom:20px">Ma vision</div>
+      <div class="imm-vision">${esc(S.vision)}</div>
+      ${S.identity?`<div class="imm-identity">« ${esc(S.identity)} »</div>`:''}
+      <div class="imm-hint">Lis-la lentement · Ressens-la déjà réelle</div>
+    </div>`;
+  document.body.appendChild(el);
+  const nav=$('#nav'); if(nav) nav.hidden=true;
+  const close=()=>{ el.remove(); if(nav) nav.hidden=false; };
+  el.querySelector('.imm-close').addEventListener('click', close);
+  el.addEventListener('click', e=>{ if(e.target===el || e.target.classList.contains('imm-inner')) close(); });
+  haptic();
 }
 
 function editVisionSheet(){
@@ -257,6 +282,7 @@ function viewVision(){
       <textarea id="main-vision" style="background:transparent;border:none;padding:0;font-family:var(--sans);font-weight:300;font-size:21px;line-height:1.4;min-height:90px"
         placeholder="Écris la vie que tu crées, au présent...">${esc(S.vision)}</textarea>
     </div>
+    <button class="btn-immersion btn-block" id="immerse2" style="margin-top:14px">✦&nbsp; Entrer en immersion</button>
 
     <div class="section-title" style="margin-top:26px"><h2 style="font-size:19px">Mon identité</h2></div>
     <p class="muted" style="font-size:13px;margin:0 4px 12px">Loi de l'assumption : tu ne manifestes pas ce que tu <i>veux</i>, mais ce que tu <b>assumes être</b>. Décris la personne que tu es déjà.</p>
@@ -281,6 +307,7 @@ function viewVision(){
     $$('[data-pillar]').forEach(t=> S.pillars[t.dataset.pillar]= t.value.trim());
     save(); toast('Vision enregistrée ✦'); haptic();
   });
+  $('#immerse2').addEventListener('click', immerse);
   $$('#idstart .chip').forEach(c=> c.addEventListener('click', ()=>{
     const ta=$('#identity'); const s=c.dataset.start;
     ta.value = (ta.value.trim() ? ta.value.trim()+'\n' : '') + s + ' ';

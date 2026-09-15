@@ -193,13 +193,13 @@ const CONTENT = {
 
   /* Échelle de fréquence / conscience (adaptée de la Carte de Hawkins) */
   frequency: [
-    { i:0, label:'Honte / Culpabilité', emoji:'🕳', color:'#6b4a4a' },
-    { i:1, label:'Peur / Anxiété',      emoji:'😰', color:'#7a5a3a' },
-    { i:2, label:'Colère / Frustration',emoji:'😤', color:'#9a6b3a' },
-    { i:3, label:'Désir / Manque',      emoji:'😶', color:'#b0873f' },
-    { i:4, label:'Courage (le seuil)',  emoji:'🔥', color:'#c6a15b' },
-    { i:5, label:'Acceptation / Calme', emoji:'🙂', color:'#c9b06a' },
-    { i:6, label:'Amour / Joie',        emoji:'💛', color:'#d9b876' },
-    { i:7, label:'Paix / Gratitude',    emoji:'✨', color:'#e6c884' },
+    { i:0, label:'Honte / Culpabilité', emoji:'🕳', color:'#5f6b86' },
+    { i:1, label:'Peur / Anxiété',      emoji:'😰', color:'#7a6bb2' },
+    { i:2, label:'Colère / Frustration',emoji:'😤', color:'#c9524a' },
+    { i:3, label:'Désir / Manque',      emoji:'😶', color:'#e07f36' },
+    { i:4, label:'Courage (le seuil)',  emoji:'🔥', color:'#e6a41f' },
+    { i:5, label:'Acceptation / Calme', emoji:'🙂', color:'#d8b32e' },
+    { i:6, label:'Amour / Joie',        emoji:'💛', color:'#c9a13a' },
+    { i:7, label:'Paix / Gratitude',    emoji:'✨', color:'#b98a2e' },
   ],
 };

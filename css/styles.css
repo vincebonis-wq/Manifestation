@@ -144,6 +144,48 @@ h1,h2,h3 { font-family: var(--serif); font-weight: 600; letter-spacing: .2px; li
   max-width: 30ch; margin: 0 auto;
 }
 .vision-text.empty { color: var(--text-mut); font-style: italic; }
+
+/* Autel de vision — cérémonie & différenciation */
+.vision-hero.altar { padding-top: 30px; }
+.altar-glyph { position:absolute; inset:0; display:grid; place-items:center; pointer-events:none; opacity:.06; }
+.altar-glyph svg { width:66%; height:auto; }
+.altar-orn { display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:14px; position:relative; }
+.altar-orn span { height:1px; width:44px; }
+.altar-orn span.l { background:linear-gradient(90deg, transparent, var(--gold-deep)); }
+.altar-orn span.r { background:linear-gradient(90deg, var(--gold-deep), transparent); }
+.altar-orn i { color: var(--gold-2); font-style:normal; font-size:13px; }
+.vision-hero .eyebrow, .vision-hero .vision-text, .vision-hero .identity-line { position:relative; z-index:1; }
+.btn-immersion {
+  position:relative; z-index:1; margin-top:22px; display:inline-flex; align-items:center; justify-content:center;
+  font-family: var(--sans); font-weight:600; font-size:13px; letter-spacing:.12em; text-transform:uppercase;
+  padding:12px 22px; border-radius:999px; cursor:pointer;
+  color: var(--gold-2); background: transparent; border:1px solid var(--gold-deep);
+  transition:.2s var(--ease);
+}
+.btn-immersion:hover { background: var(--gold-glow); color: var(--text); }
+.btn-immersion.btn-block { width:100%; }
+
+/* Mode immersion plein écran */
+#immersion {
+  position:fixed; inset:0; z-index:95; overflow-y:auto;
+  display:flex; align-items:center; justify-content:center;
+  padding: calc(env(safe-area-inset-top) + 48px) 26px calc(env(safe-area-inset-bottom) + 48px);
+  background: radial-gradient(820px 620px at 50% 18%, rgba(197,160,89,.26), transparent 62%), var(--bg);
+  animation: fade .55s var(--ease);
+}
+.imm-glyph { position:absolute; inset:0; display:grid; place-items:center; pointer-events:none; opacity:.07;
+  animation: immspin 90s linear infinite; }
+.imm-glyph svg { width:min(74vw,440px); height:auto; }
+@keyframes immspin { to { transform: rotate(360deg); } }
+.imm-close { position:absolute; top:calc(env(safe-area-inset-top) + 16px); right:18px; z-index:2;
+  width:42px; height:42px; border-radius:50%; background:var(--surface); border:1px solid var(--line);
+  color:var(--text-soft); font-size:16px; cursor:pointer; }
+.imm-inner { position:relative; z-index:1; max-width:560px; text-align:center; }
+.imm-vision { font-family:var(--sans); font-weight:300; font-size:clamp(26px,7.2vw,42px); line-height:1.28;
+  color:var(--text); letter-spacing:.3px; }
+.imm-identity { margin-top:24px; font-weight:300; font-style:italic; color:var(--gold-2);
+  font-size:clamp(16px,4.6vw,21px); line-height:1.4; }
+.imm-hint { margin-top:34px; font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--text-mut); }
 .vision-edit {
   position: absolute; top: 18px; right: 18px;
   background: rgba(80,64,32,.05); border: 1px solid var(--line);
@@ -227,12 +269,14 @@ h1,h2,h3 { font-family: var(--serif); font-weight: 600; letter-spacing: .2px; li
   font-family:var(--sans); font-weight:300; font-size:16px; color:var(--text-soft); font-style:italic;
   max-width: 32ch; margin-left:auto; margin-right:auto; }
 .freq-scale { display:flex; gap:6px; }
-.freq-cell { flex:1; aspect-ratio:1; border-radius:12px; border:1px solid var(--line);
-  background: color-mix(in srgb, var(--fc) 16%, var(--surface)); display:grid; place-items:center;
-  cursor:pointer; transition:.15s var(--ease); font-size:17px; filter:grayscale(.5) opacity(.65); }
-.freq-cell:hover { filter:none; }
-.freq-cell.on { border-color: var(--fc); background: color-mix(in srgb, var(--fc) 34%, var(--surface));
-  filter:none; transform: translateY(-2px); box-shadow: 0 6px 16px -8px var(--fc); }
+.freq-cell { flex:1; aspect-ratio:1; border-radius:12px;
+  border:1px solid color-mix(in srgb, var(--fc) 55%, var(--surface));
+  background: color-mix(in srgb, var(--fc) 42%, #fff); display:grid; place-items:center;
+  cursor:pointer; transition:.16s var(--ease); font-size:18px; opacity:.92; }
+.freq-cell:hover { opacity:1; transform: translateY(-1px); }
+.freq-cell.on { border-color: color-mix(in srgb, var(--fc) 60%, #000);
+  background: var(--fc); opacity:1; transform: translateY(-3px);
+  box-shadow: 0 8px 20px -7px var(--fc); }
 .freq-legend { display:flex; justify-content:space-between; font-size:11px; color:var(--text-mut); margin-top:10px; }
 .freq-chart { display:flex; align-items:flex-end; gap:4px; height:90px; margin-top:8px; }
 .freq-chart .fbar { flex:1; height:100%; display:flex; align-items:flex-end; }
