@@ -91,14 +91,14 @@ $('#sheet-backdrop').addEventListener('click', e => { if (e.target.id==='sheet-b
 
 /* ------------------------------------------------------------- ring */
 function ring(pct){
-  const r=26, c=2*Math.PI*r, off=c*(1-pct/100);
-  return `<div class="ring"><svg width="64" height="64" viewBox="0 0 64 64">
-    <g transform="rotate(-90 32 32)">
-      <circle class="bg" cx="32" cy="32" r="${r}" fill="none" stroke-width="6"/>
-      <circle class="fg" cx="32" cy="32" r="${r}" fill="none" stroke-width="6"
+  const r=32, c=2*Math.PI*r, off=c*(1-pct/100);
+  return `<div class="ring"><svg width="78" height="78" viewBox="0 0 78 78">
+    <g transform="rotate(-90 39 39)">
+      <circle class="bg" cx="39" cy="39" r="${r}" fill="none" stroke-width="7"/>
+      <circle class="fg" cx="39" cy="39" r="${r}" fill="none" stroke-width="7"
         stroke-dasharray="${c}" stroke-dashoffset="${off}"/>
     </g>
-    <text class="pct" x="32" y="32" text-anchor="middle" dominant-baseline="central" fill="#f4f1ea">${Math.round(pct)}%</text>
+    <text class="pct" x="39" y="40" text-anchor="middle" dominant-baseline="central">${Math.round(pct)}%</text>
   </svg></div>`;
 }
 
@@ -585,33 +585,49 @@ function blockFlow(belief='', reframe=''){
 
 let eftInt;
 function eftFlow(belief, reframe){
-  let idx=0; const pts=CONTENT.eftPoints; const SECS=7;
+  let idx=0, paused=false, s=0; const pts=CONTENT.eftPoints; const SECS=8;
   const setup = `Même si ${belief.charAt(0).toLowerCase()+belief.slice(1).replace(/\.$/,'')}, je m'accepte profondément et complètement.`;
 
   function renderPoint(){
     const p=pts[idx];
     const phrase = idx===0 ? setup : reframe;
     openSheet(`
-      <div class="eyebrow">Étape 2 · Tapping EFT · ${idx+1}/${pts.length}</div>
+      <div class="eyebrow center">Étape 2 · Tapping EFT · ${idx+1}/${pts.length}</div>
       <div class="eft-body">
         ${eftDiagram(p.key)}
         <div class="eft-point">${p.name}</div>
-        <div class="muted" style="font-size:12.5px">${p.hint}</div>
+        <div class="muted center" style="font-size:12.5px;max-width:260px">${p.hint}</div>
       </div>
       <div class="card"><div class="eft-phrase">« ${esc(phrase)} »</div></div>
-      <div class="timer-big" id="etimer" style="font-size:30px;margin-top:12px">${SECS}</div>
-      <div class="progress-dots">${pts.map((_,i)=>`<span class="d ${i<=idx?'on':''}"></span>`).join('')}</div>
-      <div class="btn-row" style="margin-top:6px">
-        <button class="btn btn-ghost" data-close>Arrêter</button>
-        <button class="btn btn-gold" id="enext">${idx<pts.length-1?'Point suivant':'Terminer'}</button>
+      <div class="eft-timerbar"><div class="eft-timerfill" id="ebar"></div></div>
+      <div class="row spread" style="margin-top:8px">
+        <span class="muted" style="font-size:12px">Ça avance tout seul · <span id="etimer">${SECS}</span>s</span>
+        <span class="muted" style="font-size:12px">Tapote ~7× en répétant à voix haute</span>
       </div>
-      <p class="muted center" style="font-size:12px;margin-top:12px">Tapote ce point ~7 fois en répétant la phrase à voix haute.</p>`);
+      <div class="btn-row" style="margin-top:14px">
+        <button class="btn btn-ghost" id="epause">Pause</button>
+        <button class="btn btn-gold" id="enext">${idx<pts.length-1?'Point suivant ›':'Terminer'}</button>
+      </div>
+      <button class="btn btn-ghost btn-block" data-close style="margin-top:10px">Arrêter la séance</button>`);
     $('[data-close]').addEventListener('click', ()=>{ clearInterval(eftInt); closeSheet(); });
-    $('#enext').addEventListener('click', next);
-    let s=SECS; clearInterval(eftInt);
-    eftInt=setInterval(()=>{ s--; const t=$('#etimer'); if(t)t.textContent=Math.max(s,0); if(s<=0){ clearInterval(eftInt); haptic(); } },1000);
+    $('#enext').addEventListener('click', advance);
+    $('#epause').addEventListener('click', ()=>{ paused=!paused; $('#epause').textContent = paused?'Reprendre':'Pause'; });
+    startTimer();
   }
-  function next(){
+  function startTimer(){
+    s=SECS; paint();
+    clearInterval(eftInt);
+    eftInt=setInterval(()=>{
+      if(paused) return;
+      s--; paint();
+      if(s<=0){ advance(); }
+    },1000);
+  }
+  function paint(){
+    const t=$('#etimer'); if(t) t.textContent=Math.max(s,0);
+    const bar=$('#ebar'); if(bar) bar.style.width = (100*(SECS-s)/SECS)+'%';
+  }
+  function advance(){
     clearInterval(eftInt); haptic();
     if (idx<pts.length-1){ idx++; renderPoint(); }
     else finish();
@@ -631,14 +647,48 @@ function eftFlow(belief, reframe){
   renderPoint();
 }
 
+/* Diagramme EFT — visage + torse + main, points anatomiquement placés */
 function eftDiagram(active){
-  // simple head diagram with points
-  const P = { eb:[42,54], se:[70,58], ue:[62,74], un:[50,88], ch:[50,100], cb:[38,128], ua:[24,150], th:[50,26], kc:[92,150] };
-  const dots = Object.entries(P).map(([k,[x,y]])=>`<circle class="eft-dot ${k===active?'active':''}" cx="${x}" cy="${y}" r="${k===active?7:4.5}"/>`).join('');
-  return `<svg class="eft-diagram" viewBox="0 0 100 175">
-    <ellipse cx="50" cy="70" rx="34" ry="44" fill="none" stroke="var(--line-strong)"/>
-    <line x1="50" y1="114" x2="50" y2="140" stroke="var(--line-strong)"/>
-    <path d="M22 175 Q50 130 78 175" fill="none" stroke="var(--line-strong)"/>
+  // positions réelles des 9 points (viewBox 120x164)
+  const P = {
+    th:[60,10],  eb:[49,40], se:[77,46], ue:[49,57], un:[60,66],
+    ch:[60,76], cb:[45,108], ua:[23,120], kc:[99,132],
+  };
+  const label = {th:'Sommet',eb:'Sourcil',se:'Coin œil',ue:'Sous l’œil',un:'Sous nez',ch:'Menton',cb:'Clavicule',ua:'Sous bras',kc:'Tranche main'};
+  const dots = Object.entries(P).map(([k,[x,y]])=>{
+    const on = k===active;
+    return `<g class="eft-dot ${on?'active':''}">
+      ${on?`<circle cx="${x}" cy="${y}" r="11" class="eft-halo"/>`:''}
+      <circle cx="${x}" cy="${y}" r="${on?6:4}" class="eft-pt"/>
+    </g>`;
+  }).join('');
+  const [ax,ay]=P[active]||[60,60];
+  return `<svg class="eft-diagram" viewBox="0 0 120 164" aria-label="Point : ${label[active]||''}">
+    <!-- épaules / torse -->
+    <path d="M6 164 C 6 128 26 116 42 112 L 78 112 C 94 116 114 128 114 164 Z"
+          fill="var(--surface)" stroke="var(--line-strong)" stroke-width="1.5"/>
+    <!-- cou -->
+    <path d="M50 96 h20 v14 q-10 6 -20 0 z" fill="var(--surface)" stroke="var(--line-strong)" stroke-width="1.5"/>
+    <!-- oreilles -->
+    <ellipse cx="33" cy="52" rx="4" ry="7" fill="var(--surface)" stroke="var(--line-strong)" stroke-width="1.5"/>
+    <ellipse cx="87" cy="52" rx="4" ry="7" fill="var(--surface)" stroke="var(--line-strong)" stroke-width="1.5"/>
+    <!-- tête -->
+    <ellipse cx="60" cy="50" rx="27" ry="33" fill="var(--surface)" stroke="var(--line-strong)" stroke-width="1.5"/>
+    <!-- sourcils -->
+    <path d="M42 38 q7 -4 14 0" fill="none" stroke="var(--text-mut)" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M64 38 q7 -4 14 0" fill="none" stroke="var(--text-mut)" stroke-width="1.6" stroke-linecap="round"/>
+    <!-- yeux -->
+    <ellipse cx="49" cy="46" rx="4.5" ry="2.8" fill="none" stroke="var(--text-mut)" stroke-width="1.4"/>
+    <ellipse cx="71" cy="46" rx="4.5" ry="2.8" fill="none" stroke="var(--text-mut)" stroke-width="1.4"/>
+    <!-- nez -->
+    <path d="M60 50 v8 q-3 2 -5 0" fill="none" stroke="var(--text-mut)" stroke-width="1.4" stroke-linecap="round"/>
+    <!-- bouche -->
+    <path d="M52 70 q8 5 16 0" fill="none" stroke="var(--text-mut)" stroke-width="1.4" stroke-linecap="round"/>
+    <!-- main (tranche) pour karaté chop -->
+    <g transform="translate(92 118) rotate(18)">
+      <rect x="0" y="0" width="16" height="26" rx="7" fill="var(--surface)" stroke="var(--line-strong)" stroke-width="1.5"/>
+      <line x1="3" y1="7" x2="3" y2="20" stroke="var(--line)" stroke-width="1"/>
+    </g>
     ${dots}
   </svg>`;
 }
