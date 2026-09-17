@@ -1,5 +1,5 @@
-/* Service worker — offline-first cache */
-const CACHE = 'manifest-v8';
+/* Service worker — network-first for app shell (mises à jour immédiates) */
+const CACHE = 'manifest-v9';
 const ASSETS = [
   './',
   './index.html',
@@ -41,14 +41,21 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // App shell: cache-first, fall back to network, then to index for navigations
-  e.respondWith(
-    caches.match(request).then(hit => hit || fetch(request).then(res => {
-      if (url.origin === location.origin) {
+  // App shell (même origine) : RÉSEAU D'ABORD → toute mise à jour s'applique au
+  // rechargement ; repli sur le cache hors-ligne (et sur index pour la navigation).
+  if (url.origin === location.origin) {
+    e.respondWith(
+      fetch(request).then(res => {
         const copy = res.clone();
         caches.open(CACHE).then(c => c.put(request, copy));
-      }
-      return res;
-    }).catch(() => request.mode === 'navigate' ? caches.match('./index.html') : Response.error()))
-  );
+        return res;
+      }).catch(() =>
+        caches.match(request).then(hit => hit || (request.mode === 'navigate' ? caches.match('./index.html') : Response.error()))
+      )
+    );
+    return;
+  }
+
+  // Autres origines : cache-first simple.
+  e.respondWith(caches.match(request).then(hit => hit || fetch(request)));
 });
