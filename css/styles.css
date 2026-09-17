@@ -181,8 +181,13 @@ h1,h2,h3 { font-family: var(--serif); font-weight: 600; letter-spacing: .2px; li
   width:42px; height:42px; border-radius:50%; background:var(--surface); border:1px solid var(--line);
   color:var(--text-soft); font-size:16px; cursor:pointer; }
 .imm-inner { position:relative; z-index:1; max-width:620px; text-align:center; }
-.imm-vision { font-family:var(--sans); font-weight:300; font-size:clamp(26px,7.2vw,42px); line-height:1.28;
+.imm-vision { font-family:var(--sans); font-weight:300; font-size:clamp(24px,7vw,var(--vmax,42px)); line-height:1.28;
   color:var(--text); letter-spacing:.3px; white-space: pre-line; }
+/* Sur grand écran : les phrases prennent la largeur, on ne coupe qu'au format d'écran */
+@media (min-width:768px){
+  .imm-inner { max-width: min(94vw, 1300px); }
+  .imm-vision { font-size: clamp(30px, 3.6vw, 54px); }
+}
 .imm-identity { margin-top:24px; font-weight:300; font-style:italic; color:var(--gold-2);
   font-size:clamp(16px,4.6vw,21px); line-height:1.4; }
 .imm-hint { margin-top:34px; font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--text-mut); }

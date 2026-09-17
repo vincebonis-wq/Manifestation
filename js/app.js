@@ -243,7 +243,7 @@ function immerse(){
     <div class="imm-inner">
       <div class="altar-orn"><span class="l"></span><i>❖</i><span class="r"></span></div>
       <div class="eyebrow" style="text-align:center;margin-bottom:20px">Ma vision</div>
-      <div class="imm-vision" style="font-size:clamp(20px,6vw,${fitSize(S.vision,[42,38,32,27,23])}px)">${esc(S.vision)}</div>
+      <div class="imm-vision" style="--vmax:${fitSize(S.vision,[42,38,32,27,23])}px">${esc(S.vision)}</div>
       ${S.identity?`<div class="imm-identity">« ${esc(S.identity)} »</div>`:''}
       <div class="imm-hint">Lis-la lentement · Ressens-la déjà réelle</div>
     </div>`;
