@@ -20,6 +20,12 @@ const prettyDate = (d=new Date()) => `${FR_DAYS[d.getDay()]} ${d.getDate()} ${FR
 
 const esc = s => String(s??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const rot = (arr, seed) => arr[Math.abs(seed) % arr.length];
+// Taille de police adaptée à la longueur (évite le re-wrap disgracieux des visions longues)
+function fitSize(t, sizes){ // sizes = [max, l1, l2, l3, l4]
+  const n=(t||'').length;
+  if(n>240) return sizes[4]; if(n>170) return sizes[3];
+  if(n>110) return sizes[2]; if(n>60) return sizes[1]; return sizes[0];
+}
 const daySeed = (() => { const d=new Date(); return d.getFullYear()*372 + d.getMonth()*31 + d.getDate(); })();
 
 /* ------------------------------------------------------------- store */
@@ -141,8 +147,9 @@ function viewHome(){
     </a>`;
   }).join('');
 
+  const vSize = fitSize(S.vision, [27,24,21,18,16]);
   const vision = S.vision
-    ? `<div class="vision-text">${esc(S.vision)}</div>`
+    ? `<div class="vision-text" style="font-size:clamp(16px,4.6vw,${vSize}px)">${esc(S.vision)}</div>`
     : `<div class="vision-text empty">Définis ta vision. Elle guidera chaque jour ton attention et ta réalité.</div>`;
   const identity = S.identity
     ? `<div class="identity-line"><span class="eyebrow" style="display:block;margin-bottom:6px">Je suis</span>${esc(S.identity)}</div>` : '';
@@ -236,7 +243,7 @@ function immerse(){
     <div class="imm-inner">
       <div class="altar-orn"><span class="l"></span><i>❖</i><span class="r"></span></div>
       <div class="eyebrow" style="text-align:center;margin-bottom:20px">Ma vision</div>
-      <div class="imm-vision">${esc(S.vision)}</div>
+      <div class="imm-vision" style="font-size:clamp(20px,6vw,${fitSize(S.vision,[42,38,32,27,23])}px)">${esc(S.vision)}</div>
       ${S.identity?`<div class="imm-identity">« ${esc(S.identity)} »</div>`:''}
       <div class="imm-hint">Lis-la lentement · Ressens-la déjà réelle</div>
     </div>`;
