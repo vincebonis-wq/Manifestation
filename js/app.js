@@ -26,6 +26,7 @@ function fitSize(t, sizes){ // sizes = [max, l1, l2, l3, l4]
   if(n>240) return sizes[4]; if(n>170) return sizes[3];
   if(n>110) return sizes[2]; if(n>60) return sizes[1]; return sizes[0];
 }
+const vScale = () => Math.min(1.8, Math.max(0.6, S.visionScale || 1));
 const daySeed = (() => { const d=new Date(); return d.getFullYear()*372 + d.getMonth()*31 + d.getDate(); })();
 
 /* ------------------------------------------------------------- store */
@@ -40,6 +41,7 @@ const DEFAULT = {
   customAffirmations: [],
   desires: [],       // {id, ts, desire, belief, expectancy, action, released, done}  (formule 4 étapes · Trudeau)
   teachability: null,// {learn, change, ts}  (Teachability Index · Trudeau)
+  visionScale: 1,    // taille du texte de la vision, réglée par l'utilisateur (0.6–1.8)
   days: {},          // dateKey -> { rituals:{}, gratitude:[], scripting:'', action:'', m369:0, frequency:null }
   blocks: [],        // {id, ts, belief, reframe}
   createdAt: Date.now(),
@@ -149,7 +151,7 @@ function viewHome(){
 
   const vSize = fitSize(S.vision, [27,24,21,18,16]);
   const vision = S.vision
-    ? `<div class="vision-text" style="font-size:clamp(16px,4.6vw,${vSize}px)">${esc(S.vision)}</div>`
+    ? `<div class="vision-text" style="--vmax:${vSize}px;--vscale:${vScale()}">${esc(S.vision)}</div>`
     : `<div class="vision-text empty">Définis ta vision. Elle guidera chaque jour ton attention et ta réalité.</div>`;
   const identity = S.identity
     ? `<div class="identity-line"><span class="eyebrow" style="display:block;margin-bottom:6px">Je suis</span>${esc(S.identity)}</div>` : '';
@@ -243,15 +245,24 @@ function immerse(){
     <div class="imm-inner">
       <div class="altar-orn"><span class="l"></span><i>❖</i><span class="r"></span></div>
       <div class="eyebrow" style="text-align:center;margin-bottom:20px">Ma vision</div>
-      <div class="imm-vision" style="--vmax:${fitSize(S.vision,[42,38,32,27,23])}px">${esc(S.vision)}</div>
+      <div class="imm-vision" style="--vmax:${fitSize(S.vision,[42,38,32,27,23])}px;--vscale:${vScale()}">${esc(S.vision)}</div>
       ${S.identity?`<div class="imm-identity">« ${esc(S.identity)} »</div>`:''}
       <div class="imm-hint">Lis-la lentement · Ressens-la déjà réelle</div>
+    </div>
+    <div class="imm-size">
+      <button class="a1" data-sz="-1" aria-label="Réduire">A−</button>
+      <button class="a2" data-sz="1" aria-label="Agrandir">A+</button>
     </div>`;
   document.body.appendChild(el);
   const nav=$('#nav'); if(nav) nav.hidden=true;
   const close=()=>{ el.remove(); if(nav) nav.hidden=false; };
   el.querySelector('.imm-close').addEventListener('click', close);
   el.addEventListener('click', e=>{ if(e.target===el || e.target.classList.contains('imm-inner')) close(); });
+  el.querySelectorAll('[data-sz]').forEach(b=> b.addEventListener('click', ()=>{
+    S.visionScale = Math.min(1.8, Math.max(0.6, (+((S.visionScale||1).toFixed(2))) + (+b.dataset.sz)*0.1));
+    save(); haptic();
+    el.querySelector('.imm-vision').style.setProperty('--vscale', vScale());
+  }));
   haptic();
 }
 
@@ -260,6 +271,10 @@ function editVisionSheet(){
     <h2 style="font-size:22px;margin-bottom:6px">Ta vision</h2>
     <p class="muted" style="font-size:13.5px;margin-bottom:8px">Une phrase claire, au présent, chargée d'émotion. C'est ton étoile polaire.</p>
     <textarea id="v-in" placeholder="Ex : Je vis de mon business qui génère 20k€/mois, libre, en pleine santé, entouré des bonnes personnes.">${esc(S.vision)}</textarea>
+    <div class="size-row" style="margin-top:14px">
+      <span class="muted" style="font-size:13px">Taille du texte · <b class="gold" id="sz-val">${Math.round(vScale()*100)}%</b></span>
+      <div class="st"><button data-sz="-1" aria-label="Réduire">A−</button><button data-sz="1" aria-label="Agrandir">A+</button></div>
+    </div>
     <div class="btn-row" style="margin-top:16px">
       <button class="btn btn-ghost" data-close>Annuler</button>
       <button class="btn btn-gold" id="v-save">Enregistrer</button>
@@ -267,6 +282,10 @@ function editVisionSheet(){
   $('#v-save').addEventListener('click', ()=>{
     S.vision = $('#v-in').value.trim(); save(); closeSheet(); toast('Vision enregistrée ✦'); render();
   });
+  $$('[data-sz]').forEach(b=> b.addEventListener('click', ()=>{
+    S.visionScale = Math.min(1.8, Math.max(0.6, (+((S.visionScale||1).toFixed(2))) + (+b.dataset.sz)*0.1));
+    save(); haptic(); $('#sz-val').textContent = Math.round(vScale()*100)+'%';
+  }));
   $('[data-close]').addEventListener('click', closeSheet);
 }
 

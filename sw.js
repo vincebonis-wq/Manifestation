@@ -1,5 +1,5 @@
 /* Service worker — network-first for app shell (mises à jour immédiates) */
-const CACHE = 'manifest-v11';
+const CACHE = 'manifest-v12';
 const ASSETS = [
   './',
   './index.html',

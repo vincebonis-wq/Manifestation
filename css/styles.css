@@ -139,7 +139,7 @@ h1,h2,h3 { font-family: var(--serif); font-weight: 600; letter-spacing: .2px; li
 .vision-hero .eyebrow { margin-bottom: 14px; }
 .vision-hero .vision-edit { text-align: initial; }
 .vision-text {
-  font-family: var(--sans); font-size: clamp(20px, 5.4vw, 27px);
+  font-family: var(--sans); font-size: calc(clamp(16px, 4.6vw, var(--vmax, 27px)) * var(--vscale, 1));
   line-height: 1.36; color: var(--text); font-weight: 300; letter-spacing: .2px;
   max-width: 100%; margin: 0 auto; white-space: pre-line;
 }
@@ -181,13 +181,25 @@ h1,h2,h3 { font-family: var(--serif); font-weight: 600; letter-spacing: .2px; li
   width:42px; height:42px; border-radius:50%; background:var(--surface); border:1px solid var(--line);
   color:var(--text-soft); font-size:16px; cursor:pointer; }
 .imm-inner { position:relative; z-index:1; max-width:620px; text-align:center; }
-.imm-vision { font-family:var(--sans); font-weight:300; font-size:clamp(24px,7vw,var(--vmax,42px)); line-height:1.28;
+.imm-vision { font-family:var(--sans); font-weight:300; font-size:calc(clamp(24px,7vw,var(--vmax,42px)) * var(--vscale,1)); line-height:1.28;
   color:var(--text); letter-spacing:.3px; white-space: pre-line; }
 /* Sur grand écran : les phrases prennent la largeur, on ne coupe qu'au format d'écran */
 @media (min-width:768px){
   .imm-inner { max-width: min(94vw, 1300px); }
-  .imm-vision { font-size: clamp(30px, 3.6vw, 54px); }
+  .imm-vision { font-size: calc(clamp(30px, 3.6vw, 54px) * var(--vscale,1)); }
 }
+/* Contrôle de taille (A− / A+) */
+.imm-size { position:absolute; left:50%; transform:translateX(-50%); bottom:calc(env(safe-area-inset-bottom) + 26px);
+  z-index:2; display:flex; align-items:center; gap:10px; }
+.imm-size button { width:44px; height:44px; border-radius:50%; background:var(--surface); border:1px solid var(--line-strong);
+  color:var(--gold-2); font-family:var(--title); font-weight:700; cursor:pointer; transition:.15s var(--ease); }
+.imm-size button:hover { background:var(--gold-glow); }
+.imm-size .a1 { font-size:13px; } .imm-size .a2 { font-size:19px; }
+.size-row { display:flex; align-items:center; justify-content:space-between; gap:10px;
+  background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:10px 14px; }
+.size-row .st { display:flex; gap:8px; }
+.size-row .st button { width:40px; height:40px; border-radius:10px; background:var(--bg-elev); border:1px solid var(--line-strong);
+  color:var(--gold-2); font-family:var(--title); font-weight:700; cursor:pointer; }
 .imm-identity { margin-top:24px; font-weight:300; font-style:italic; color:var(--gold-2);
   font-size:clamp(16px,4.6vw,21px); line-height:1.4; }
 .imm-hint { margin-top:34px; font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--text-mut); }
