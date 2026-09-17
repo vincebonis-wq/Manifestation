@@ -141,7 +141,7 @@ h1,h2,h3 { font-family: var(--serif); font-weight: 600; letter-spacing: .2px; li
 .vision-text {
   font-family: var(--sans); font-size: clamp(20px, 5.4vw, 27px);
   line-height: 1.36; color: var(--text); font-weight: 300; letter-spacing: .2px;
-  max-width: 30ch; margin: 0 auto;
+  max-width: 30ch; margin: 0 auto; white-space: pre-line;
 }
 .vision-text.empty { color: var(--text-mut); font-style: italic; }
 
@@ -182,7 +182,7 @@ h1,h2,h3 { font-family: var(--serif); font-weight: 600; letter-spacing: .2px; li
   color:var(--text-soft); font-size:16px; cursor:pointer; }
 .imm-inner { position:relative; z-index:1; max-width:560px; text-align:center; }
 .imm-vision { font-family:var(--sans); font-weight:300; font-size:clamp(26px,7.2vw,42px); line-height:1.28;
-  color:var(--text); letter-spacing:.3px; }
+  color:var(--text); letter-spacing:.3px; white-space: pre-line; }
 .imm-identity { margin-top:24px; font-weight:300; font-style:italic; color:var(--gold-2);
   font-size:clamp(16px,4.6vw,21px); line-height:1.4; }
 .imm-hint { margin-top:34px; font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--text-mut); }
