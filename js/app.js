@@ -123,7 +123,11 @@ function header(streakVal){
       <a class="sync-dot ${st}" href="#/progress" title="Synchro : ${SYNC_LABEL[st]||st}" aria-label="Synchronisation"><span class="d"></span></a>
       <div class="streak-pill">✦ ${streakVal} ${streakVal>1?'jours':'jour'}</div>
     </div>
-  </div>`;
+  </div>
+  <nav class="space-switch" aria-label="Changer d'espace">
+    <a href="#/" class="on" aria-current="page">✦ Manifestation</a>
+    <a href="emotion/">☾ Émotion</a>
+  </nav>`;
 }
 function paintSync(){
   const el = $('.sync-dot'); if(!el || !window.Sync) return;

@@ -88,3 +88,18 @@ Le point coloré en haut à droite indique l'état : gris = local, doré clignot
 ---
 
 *Vois-le. Deviens-le. Agis. ✦*
+
+---
+
+## Deux espaces, un seul site : Manifestation ✦ + Émotion ☾
+
+L'app **Travail émotionnel** (issue du dépôt `vincebonis-wq/Emotion`) est intégrée telle quelle dans le dossier [`emotion/`](emotion/).
+Un sélecteur d'onglets en haut des deux apps permet de passer de l'une à l'autre.
+
+- Manifestation : `https://vincebonis-wq.github.io/Manifestation/`
+- Émotion : `https://vincebonis-wq.github.io/Manifestation/emotion/`
+
+Même site = une seule installation PWA. Données locales séparées (`manifest.*` vs `emotion_*`).
+**Firebase** : un seul projet peut servir les deux (même compte) — coller la même config dans
+`js/firebase-config.js` **et** `emotion/js/firebase-config.js`, et publier [`firestore.rules`](firestore.rules)
+(couvre le document de Manifestation et les sous-collections d'Émotion).
